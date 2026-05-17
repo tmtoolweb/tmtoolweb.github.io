@@ -162,19 +162,13 @@
         <span class="note">(Mọi thao tác Xem thiết bị, Import Excel, Thêm thủ công sẽ lưu trực tiếp vào User này)</span>
     </div>
 
-    
-    
-    <div class="tabs-header">
-        <button class="tab-link active" onclick="openTab(event, 'tab-monitor')">📊 Bảng Thiết Bị</button>
-        <button class="tab-link" id="add-device-tab-menu" onclick="openTab(event, 'tab-add-device')">➕ Thêm Máy & Đồng Bộ</button>
-        <button class="tab-link" id="admin-tab-menu" style="display:none; color: #856404; background: #fff3cd;" onclick="openTab(event, 'tab-admin-mgr')">⚙️ Quản Lý Thành Viên</button>
     <div class="action-bar">
         <div class="action-bar-left">
             <div class="tabs-header-embed">
                 <span style="font-weight: bold; font-size: 14px; color: #495057;">📊 Bảng Điều Khiển Trung Tâm</span>
             </div>
         </div>
-<div class="action-bar-right">
+        <div class="action-bar-right">
             <div class="filter-box">
                 <label>🔍 Bộ lọc thiết bị (Phone ID):</label>
                 <select id="device-filter-select" onchange="filterTableByPhoneId(this.value)">
@@ -183,11 +177,13 @@
             </div>
             <button class="excel-btn" onclick="alert('Tính năng Xuất Excel đang được gọi...')">📥 Xuất Excel Thiết Bị</button>
         </div>
-        
     </div>
-</div>
-
-
+    
+    <div class="tabs-header">
+        <button class="tab-link active" onclick="openTab(event, 'tab-monitor')">📊 Bảng Thiết Bị</button>
+        <button class="tab-link" id="add-device-tab-menu" onclick="openTab(event, 'tab-add-device')">➕ Thêm Máy & Đồng Bộ</button>
+        <button class="tab-link" id="admin-tab-menu" style="display:none; color: #856404; background: #fff3cd;" onclick="openTab(event, 'tab-admin-mgr')">⚙️ Quản Lý Thành Viên</button>
+    </div>
 
     <div id="tab-monitor" class="tab-content active">
         <div class="table-wrapper">
