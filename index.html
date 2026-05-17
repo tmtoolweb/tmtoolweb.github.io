@@ -59,16 +59,16 @@
         .form-grid.checkbox-row div { flex-direction: row; align-items: center; gap: 8px; }
         .form-grid.checkbox-row input { width: auto; margin: 0; }
         
-        /* FIX PC OVERFLOW HORIZONTAL */
-        .table-wrapper { width: 100%; overflow-x: auto; overflow-y: auto; max-height: 600px; border: 1px solid #dee2e6; border-radius: 4px; background: #fff; position: relative; }
-        table { border-collapse: separate; border-spacing: 0; width: 100%; min-width: 1600px; /* Ép bảng rộng trên PC để cuộn ngang không bị co rúm */ }
+        /* FIX PC OVERFLOW HORIZONTAL & VERTICAL EXTENSION */
+        .table-wrapper { width: 100%; overflow-x: auto; overflow-y: auto; max-height: 85vh; /* Thay đổi từ 600px cố định sang 85% chiều cao màn hình trình duyệt */ border: 1px solid #dee2e6; border-radius: 4px; background: #fff; position: relative; }
+        table { border-collapse: separate; border-spacing: 0; width: 100%; min-width: 1600px; }
         th, td { border-right: 1px solid #dee2e6; border-bottom: 1px solid #dee2e6; padding: 8px 10px; text-align: left; vertical-align: middle; white-space: nowrap; box-sizing: border-box; }
         thead th { position: sticky; top: 0; background-color: var(--primary-color); color: white; z-index: 10; height: 40px; }
         thead th.sortable { cursor: pointer; user-select: none; }
         thead th.sortable:hover { background-color: var(--primary-hover); }
         .sort-icon { font-size: 11px; margin-left: 3px; color: #ffeb3b; }
 
-        /* Cố định 2 cột đầu trên PC để dễ nhìn */
+        /* Cố định 2 cột đầu trên PC */
         th:nth-child(1), td:nth-child(1) { position: sticky; left: 0; background-color: #fff; z-index: 3; width: 140px; min-width: 140px; }
         th:nth-child(2), td:nth-child(2) { position: sticky; left: 140px; background-color: #fff; z-index: 3; width: 90px; min-width: 90px; }
         thead th:nth-child(1) { z-index: 12; background-color: #0069d9; }
@@ -77,7 +77,7 @@
 
         .limit-cell { max-width: 180px; white-space: normal; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; text-overflow: ellipsis; line-height: 1.4; }
 
-        /* ACTION CELL & GRIDS */
+        /* ACTION CELL & GRIDS ON PC */
         .action-grid { display: flex; flex-direction: column; gap: 5px; width: 130px; }
         .action-row-1 { display: flex; gap: 4px; }
         .action-row-2 { display: flex; gap: 4px; align-items: center; }
@@ -85,7 +85,6 @@
         .btn-mini { padding: 3px 8px; font-size: 11px; border-radius: 4px; cursor: pointer; font-weight: bold; border: none; }
         .btn-play { background: var(--success-color); color: white; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; border-radius: 4px; font-size: 12px; }
 
-        /* WARNINGS & STATUS */
         tr.duplicate-warning td { background-color: #f8d7da !important; }
         tr.farming-highlight td { background-color: #e2f0d9 !important; }
         .badge-warning { background-color: var(--danger-color); color: white; padding: 2px 4px; border-radius: 3px; font-size: 10px; font-weight: bold; }
@@ -94,31 +93,42 @@
         .summary-badge { background: #e2e3e5; padding: 8px 12px; border-radius: 5px; font-weight: bold; display: inline-block; margin-bottom: 10px; margin-right: 10px; }
         .upload-section { border: 2px dashed var(--primary-color); background: #f0f8ff; padding: 20px; text-align: center; border-radius: 6px; }
 
-        /* CONTAINER ĐỔI DIỆN MẠO TRÊN MOBILE (MOBILE CARDS) */
-        .mobile-cards-container { display: none; flex-direction: column; gap: 12px; margin-top: 10px; }
-        .mobile-card { background: #fff; border: 1px solid #ddd; border-radius: 8px; padding: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.02); position: relative; }
-        .mobile-card.card-running { border-left: 5px solid var(--success-color); background: #fafd96; }
-        .mobile-card.card-stopped { border-left: 5px solid var(--danger-color); }
-        .mobile-card.card-duplicate { border: 1px solid var(--danger-color); background: #fdf2f2; }
-        .card-header-row { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; padding-bottom: 6px; margin-bottom: 8px; }
-        .card-title { font-weight: bold; color: #0056b3; font-size: 14px; }
-        .card-body-row { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; font-size: 12px; margin-bottom: 8px; }
-        .card-label { color: #666; font-weight: 500; }
-        .card-value { color: #111; font-weight: bold; text-align: right; word-break: break-all; }
-        .card-log { grid-column: span 2; background: #f8f9fa; padding: 6px; border-radius: 4px; margin-top: 4px; font-size: 11px; max-height: 60px; overflow-y: auto; border: 1px solid #e9ecef; }
-        .card-actions { border-top: 1px solid #eee; padding-top: 8px; display: flex; flex-direction: column; gap: 6px; }
+        /* TOÀN BỘ CẤU TRÚC MOBILE CARDS SIÊU THU GỌN - CHỈ ĐÚNG 3 DÒNG */
+        .mobile-cards-container { display: none; flex-direction: column; gap: 6px; margin-top: 5px; }
+        .mobile-card { background: #fff; border: 1px solid #ccc; border-radius: 6px; padding: 8px 10px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); box-sizing: border-box; }
+        .mobile-card.card-running { border-left: 4px solid var(--success-color); background: #f1fcf4; }
+        .mobile-card.card-stopped { border-left: 4px solid var(--danger-color); }
+        .mobile-card.card-duplicate { border: 1px solid var(--danger-color); background: #fff5f5; }
+        
+        /* Dòng 1: phoneId | username | [userType] -------- Trạng thái */
+        .mob-row-1 { display: flex; justify-content: space-between; align-items: center; font-size: 13px; margin-bottom: 4px; }
+        .mob-info-wrap { display: flex; align-items: center; gap: 4px; font-weight: 500; color: #444; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .mob-pid { font-weight: bold; color: #000; }
+        .mob-uname { color: var(--primary-color); font-weight: bold; }
+        .mob-utype { background: #e9ecef; color: #495057; font-size: 11px; padding: 1px 4px; border-radius: 3px; font-weight: normal; }
+        
+        /* Dòng 2: Lệnh chờ: [Tên lệnh] -------- [Sửa] [Xóa] */
+        .mob-row-2 { display: flex; justify-content: space-between; align-items: center; font-size: 12px; margin-bottom: 4px; background: rgba(0,0,0,0.02); padding: 3px 6px; border-radius: 4px; }
+        .mob-cmd-label { color: #e67e22; font-weight: bold; }
+        .mob-btn-group { display: flex; gap: 4px; }
+        .mob-btn-action { padding: 3px 6px; font-size: 11px; border-radius: 3px; border: none; cursor: pointer; font-weight: bold; }
+
+        /* Dòng 3: [Ô chọn lệnh (Start/Stop...)] [Nút ▶] */
+        .mob-row-3 { display: flex; gap: 5px; align-items: center; margin-top: 2px; }
+        .mob-select-cmd { flex: 1; height: 32px; padding: 4px; font-size: 12px; margin: 0; border: 1px solid #bbb; border-radius: 4px; }
+        .mob-btn-play { background: var(--success-color); color: white; width: 40px; height: 32px; border: none; border-radius: 4px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 13px; }
 
         /* RESPONSIVE MEDIA QUERIES */
         @media screen and (max-width: 768px) {
             body { padding: 5px; }
-            .container { padding: 10px; }
-            .header-area { flex-direction: column; align-items: flex-start; }
-            .logout-btn { width: 100%; }
+            .container { padding: 8px; }
+            .header-area { flex-direction: column; align-items: flex-start; gap: 5px; margin-bottom: 8px; }
+            .logout-btn { width: 100%; padding: 8px; }
             .admin-control-wrap select { width: 100%; }
             .tabs-header { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; border-bottom: none; }
             .tab-link { border-radius: 4px; text-align: center; padding: 8px 5px; font-size: 12px; }
             
-            /* Ẩn bảng trên Mobile, hiện dạng Card dọc */
+            /* Ẩn bảng trên Mobile, hiện dạng Card 3 dòng siêu rút gọn */
             .table-wrapper { display: none; }
             .mobile-cards-container { display: flex; }
             
@@ -209,7 +219,7 @@
         </div>
 
         <div class="panel-box">
-            <h3 id="form-title" style="margin-top:0; color:#0c5460;">1. Nhập Thủ Công Tài Khoản Cấu Hình</h3>
+            <h3 id="form-title" style="margin-top:0; color:#0c5460;">1. Nhập Thủ Công Tài Khoản Cấu Configuration</h3>
             <div class="form-grid">
                 <div><label>phoneId (*Bắt buộc)</label><input type="text" id="f-phoneId" placeholder="Ví dụ: May_01"></div>
                 <div><label>userName (*Bắt buộc)</label><input type="text" id="f-userName"></div>
@@ -280,7 +290,6 @@
 </div>
 
 <script>
-    // Giữ nguyên toàn bộ cấu hình Firebase cũ của anh
     const firebaseConfig = {
         apiKey: "AIzaSyBwvXHAWHy8af7uyuH0B62F07vYHYF7m8o", 
         authDomain: "tmtool-firebase.firebaseapp.com",
@@ -472,7 +481,6 @@
         });
     }
 
-    // --- HÀM DỰNG GIAO DIỆN (ĐÃ TÍCH HỢP ĐỦ RENDER BẢNG VÀ RENDER MOBILE CARDS) ---
     function renderDeviceTable() {
         const tbody = document.getElementById('devices-table-body');
         const mobileContainer = document.getElementById('devices-mobile-container');
@@ -625,37 +633,38 @@
             `;
             tbody.appendChild(tr);
 
-            // RENDER 2: Giao diện Card cho Mobile
+            // RENDER 2: GIAO DIỆN SIÊU THU GỌN 3 DÒNG TRÊN MOBILE CHÍNH XÁC YÊU CẦU
             const card = document.createElement('div');
             card.className = `mobile-card ${isRunning || String(dev._msgDisplay).toLowerCase().includes("farming") ? 'card-running' : 'card-stopped'} ${isDup ? 'card-duplicate' : ''}`;
             
             card.innerHTML = `
-                <div class="card-header-row">
-                    <div class="card-title">📱 ${pId} [${dev.userType || 'N/A'}]</div>
-                    <div class="${isRunning?'status-running':'status-stopped'}">${isRunning ? 'RUNNING' : 'STOPPED'}</div>
-                </div>
-                <div class="card-body-row">
-                    <div><span class="card-label">User:</span></div><div class="card-value" style="color:var(--primary-color);">${dev.userName || ''}</div>
-                    <div><span class="card-label">Lệnh chờ:</span></div><div class="card-value" style="color:#e67e22;">${dev._activeCommand}</div>
-                    <div><span class="card-label">Nhóm:</span></div><div class="card-value">${dev.userGroup || 0}</div>
-                    <div><span class="card-label">Tương tác:</span></div><div class="card-value">${dev.tuongTacAccount || 'no'}</div>
-                    <div class="card-log" title="Logs"><b>Log:</b> ${logs || 'Trống'}</div>
-                </div>
-                <div class="card-actions">
-                    <div style="display:flex; gap: 5px;">
-                        <button class="btn-mini" style="background:var(--warning-color); color:black; flex:1; padding: 6px;" onclick="triggerEditMode('${pId}', '${accKey}')">✏️ Sửa</button>
-                        <button class="btn-mini" style="background:var(--danger-color); color:white; flex:1; padding: 6px;" onclick="deleteDevice('${pId}', '${accKey}')">🗑️ Xóa</button>
+                <div class="mob-row-1">
+                    <div class="mob-info-wrap">
+                        <span class="mob-pid">${pId}</span> | 
+                        <span class="mob-uname">${dev.userName || 'N/A'}</span> | 
+                        <span class="mob-utype">[${dev.userType || 'N/A'}]</span>
+                        ${isDup ? '<span class="badge-warning" style="padding:1px 2px; font-size:9px;">Trùng</span>' : ''}
                     </div>
-                    <div style="display:flex; gap: 5px; align-items:center;">
-                        <select id="cmd-select-mob-${pId}-${accKey}" style="flex:1; height:34px; margin:0; padding:4px;">
-                            <option value="START_FARM">Start Farm</option>
-                            <option value="STOP_FARM">Stop Farm</option>
-                            <option value="REFRESH">Refresh App</option>
-                            <option value="CLEAR_DATA">Clear Data</option>
-                            <option value="REBOOT">Reboot Máy</option>
-                        </select>
-                        <button style="background:var(--success-color); height:34px; width:45px; display:flex; justify-content:center; align-items:center;" onclick="triggerDeviceCommandMobile('${pId}', '${accKey}', '${dev.userName}', '${dev.userType}')">▶</button>
+                    <div class="${isRunning?'status-running':'status-stopped'}" style="font-size:12px;">${isRunning ? 'RUNNING' : 'STOPPED'}</div>
+                </div>
+                
+                <div class="mob-row-2">
+                    <div><span style="color:#666;">Lệnh chờ:</span> <span class="mob-cmd-label">${dev._activeCommand}</span></div>
+                    <div class="mob-btn-group">
+                        <button class="mob-btn-action" style="background:var(--warning-color); color:black;" onclick="triggerEditMode('${pId}', '${accKey}')">✏️ Sửa</button>
+                        <button class="mob-btn-action" style="background:var(--danger-color); color:white;" onclick="deleteDevice('${pId}', '${accKey}')">🗑️ Xóa</button>
                     </div>
+                </div>
+                
+                <div class="mob-row-3">
+                    <select id="cmd-select-mob-${pId}-${accKey}" class="mob-select-cmd">
+                        <option value="START_FARM">Start Farm</option>
+                        <option value="STOP_FARM">Stop Farm</option>
+                        <option value="REFRESH">Refresh App</option>
+                        <option value="CLEAR_DATA">Clear Data</option>
+                        <option value="REBOOT">Reboot Máy</option>
+                    </select>
+                    <button class="mob-btn-play" onclick="triggerDeviceCommandMobile('${pId}', '${accKey}', '${dev.userName}', '${dev.userType}')">▶</button>
                 </div>
             `;
             mobileContainer.appendChild(card);
@@ -667,11 +676,9 @@
         database.ref(`manager_devices/${targetOwner}/${pId}/command`).set({ action: cmd, userName: uName, userType: uType });
     }
 
-    // Gửi lệnh riêng biệt hỗ trợ ID trên Mobile
     function triggerDeviceCommandMobile(pId, accKey, uName, uType) {
         const cmd = document.getElementById(`cmd-select-mob-${pId}-${accKey}`).value;
         database.ref(`manager_devices/${targetOwner}/${pId}/command`).set({ action: cmd, userName: uName, userType: uType });
-        alert(`Đã truyền lệnh [${cmd}] thành công!`);
     }
 
     function handleExcelUpload() {
