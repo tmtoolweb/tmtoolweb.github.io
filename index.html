@@ -32,18 +32,18 @@
         .btn-google { background-color: #dc3545; width: 100%; margin-top: 10px; display: flex; align-items: center; justify-content: center; gap: 10px; }
 
         /* KANBAN/STATS CARDS */
-        .stats-container { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 15px; }
-        .stat-card { flex: 1; min-width: 220px; background: #e8f4fd; border-left: 4px solid #007bff; padding: 12px 15px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
+        .stats-container { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 5px; }
+        .stat-card { flex: 1; min-width: 220px; background: #e8f4fd; border-left: 4px solid #007bff; padding: 2px 5px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
         .stat-card.job-rate { background: #eafaf1; border-left-color: #28a745; }
         .stat-label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; color: #6c757d; font-weight: 600; margin-bottom: 4px; }
         .stat-value { font-size: 16px; font-weight: 700; color: #007bff; }
         .stat-card.job-rate .stat-value { color: #28a745; }
 
         /* ADMIN CONTROL BOX */
-        .admin-box { background: #fff9e6; border: 1px solid #ffeeba; border-left: 4px solid #ffc107; padding: 15px; border-radius: 8px; margin-bottom: 20px; display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+        .admin-box { background: #fff9e6; border: 1px solid #ffeeba; border-left: 4px solid #ffc107; padding: 5px; border-radius: 2px; margin-bottom: 2px; display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
         .admin-box label { font-weight: 700; color: #856404; font-size: 12px; }
-        .admin-box select { background: white; font-weight: 700; color: #007bff; border-color: #ffc107; min-width: 220px; }
-        .admin-box .note { color: #6c757d; font-size: 12px; font-style: italic; }
+        .admin-box select { background: white; font-weight: 700; color: #007bff; border-color: #ffc107; min-width: 150px; }
+        
 
         /* FILTER & EXCEL BAR (HÀNG LIÊN KẾT TRÊN PC) */
         .action-bar { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 15px; background: #f8f9fa; padding: 10px 15px; border-radius: 8px; border: 1px solid #e9ecef; }
@@ -139,15 +139,10 @@
     
     <div class="header-top">
         <h2 class="header-welcome">Xin chào: <span id="user-display" style="color: #007bff;"></span> <span id="role-display" style="font-size: 12px; color: #6c757d; font-weight: normal;"></span></h2>
-        <div class="header-actions">
-            <button class="pw-btn" onclick="alert('Tính năng đổi mật khẩu đang được phát triển!')">🔑 Đổi mật khẩu</button>
-            <button class="logout-btn" onclick="logout()">🚪 Đăng xuất</button>
-        </div>
-    </div>
-
-    <div class="stats-container">
+        
+		<div class="stats-container">
         <div class="stat-card">
-            <div class="stat-label">💰 Tổng Kiếm Được Hôm Hiện Tại</div>
+            <div class="stat-label">💰 Tổng Kiếm Được Hôm Nay</div>
             <div class="stat-value"><span id="top-revenue">0đ</span></div>
         </div>
         <div class="stat-card job-rate">
@@ -155,35 +150,45 @@
             <div class="stat-value"><span id="top-job-rate">0 / 0 (0%)</span></div>
         </div>
     </div>
-    
-    <div id="admin-selector-box" class="admin-box" style="display:none;">
-        <label>⚡ ĐANG ĐIỀU KHIỂN & ĐỒNG BỘ CHO USER:</label>
+		<div id="admin-selector-box" class="admin-box" style="display:none;">
+        <label>⚡ ĐIỀU KHIỂN CHO USER:</label>
         <select id="admin-user-select" onchange="onAdminSelectUser(this.value)"></select>
-        <span class="note">(Mọi thao tác Xem thiết bị, Import Excel, Thêm thủ công sẽ lưu trực tiếp vào User này)</span>
+        
     </div>
+		<div class="header-actions">
+            <button class="pw-btn" onclick="alert('Tính năng đổi mật khẩu đang được phát triển!')">🔑 Đổi mật khẩu</button>
+            <button class="logout-btn" onclick="logout()">🚪 Đăng xuất</button>
+        </div>
+    </div>
+
+    
+    
+    
 
     <div class="action-bar">
         <div class="action-bar-left">
-            <div class="tabs-header-embed">
-                <span style="font-weight: bold; font-size: 14px; color: #495057;">📊 Bảng Điều Khiển Trung Tâm</span>
-            </div>
+		
+		<div class="tabs-header">
+        <button class="tab-link active" onclick="openTab(event, 'tab-monitor')">📊 Danh sách Users</button>
+        <button class="tab-link" id="add-device-tab-menu" onclick="openTab(event, 'tab-add-device')">➕ Thêm</button>
+        <button class="tab-link" id="admin-tab-menu" style="display:none; color: #856404; background: #fff3cd;" onclick="openTab(event, 'tab-admin-mgr')">⚙️ Quản Lý Thành Viên</button>
+    </div>
+	
+	
+            
         </div>
         <div class="action-bar-right">
             <div class="filter-box">
-                <label>🔍 Bộ lọc thiết bị (Phone ID):</label>
+                <label>🔍 Lọc thiết bị:</label>
                 <select id="device-filter-select" onchange="filterTableByPhoneId(this.value)">
-                    <option value="">-- Hiển thị tất cả máy --</option>
+                    <option value="">-- Tất cả --</option>
                 </select>
             </div>
-            <button class="excel-btn" onclick="alert('Tính năng Xuất Excel đang được gọi...')">📥 Xuất Excel Thiết Bị</button>
+            <button class="excel-btn" onclick="alert('Tính năng Xuất Excel đang được gọi...')">📥 Xuất Excel</button>
         </div>
     </div>
     
-    <div class="tabs-header">
-        <button class="tab-link active" onclick="openTab(event, 'tab-monitor')">📊 Bảng Thiết Bị</button>
-        <button class="tab-link" id="add-device-tab-menu" onclick="openTab(event, 'tab-add-device')">➕ Thêm Máy & Đồng Bộ</button>
-        <button class="tab-link" id="admin-tab-menu" style="display:none; color: #856404; background: #fff3cd;" onclick="openTab(event, 'tab-admin-mgr')">⚙️ Quản Lý Thành Viên</button>
-    </div>
+    
 
     <div id="tab-monitor" class="tab-content active">
         <div class="table-wrapper">
@@ -348,7 +353,7 @@
             document.getElementById('user-display').innerText = loggedInUserEmail;
 
             if (loggedInUserEmail === "admin@gmail.com") {
-                document.getElementById('role-display').innerText = "(Tổng Quản Trị)";
+                document.getElementById('role-display').innerText = "(Quản Trị)";
                 document.getElementById('admin-tab-menu').style.display = 'block';
                 document.getElementById('admin-selector-box').style.display = 'flex'; 
                 loadAllUsersForAdmin(); 
@@ -501,7 +506,7 @@
     function updateDeviceFilterOptions() {
         const filterSelect = document.getElementById('device-filter-select');
         const currentSelected = filterSelect.value;
-        filterSelect.innerHTML = '<option value="">-- Hiển thị tất cả máy --</option>';
+        filterSelect.innerHTML = '<option value="">-- Tất cả --</option>';
         
         const rawTreeData = globalCachedDevices;
         Object.keys(rawTreeData).forEach(pId => {
