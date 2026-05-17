@@ -112,8 +112,8 @@
                 <span id="role-display" style="font-size: 12px; color: #6c757d;"></span>
             </div>
             <div style="font-size: 14px; font-weight: normal; background: #e2f0d9; padding: 5px 10px; border-radius: 5px; border: 1px solid #cddcb4;">
-                💰 Tổng Kiếm Được Hôm Nay: <b id="sum-money-today" style="color:#28a745;">0đ</b> &nbsp;|&nbsp; 
-                🎯 Tỷ Lệ Job Hôm Nay: <b id="sum-job-today" style="color:#dc3545;">0 / 0 (0%)</b>
+                💰 Tổng Kiếm Được Hôm Hiện Tại: <b id="sum-money-today" style="color:#28a745;">0đ</b> &nbsp;|&nbsp; 
+                🎯 Tỷ Lệ Job: <b id="sum-job-today" style="color:#dc3545;">0 / 0 (0%)</b>
             </div>
         </h2>
         <div style="display: flex; gap: 5px;">
@@ -293,29 +293,95 @@
     let globalCachedDevices = {}; 
     let currentEditingId = null;  
 
+    // DANH SÁCH EMAIL ADMIN ĐƯỢC PHÉP ĐĂNG NHẬP
+    const adminEmails = ["admin@gmail.com", "nguyendanhmanh@gmail.com", "tuelzd@gmail.com"];
+
     // Các biến phục vụ tính năng SORT bảng thiết bị
     let currentSortField = "farming_priority"; 
     let isSortAsc = true; 
 
     auth.onAuthStateChanged((user) => {
         if (user) {
-            loggedInUserEmail = user.email;
-            document.getElementById('login-form').style.display = 'none';
-            document.getElementById('dashboard').style.display = 'block';
-            document.getElementById('user-display').innerText = loggedInUserEmail;
+            loggedInUserEmail = user.email ? user.email.toLowerCase().trim() : "";
+            const currentPrefixKey = loggedInUserEmail.split('@')[0]; // Lấy phần tên trước chữ @ (ví dụ: cuongvn)
 
-            if (loggedInUserEmail === "admin@gmail.com") {
-                document.getElementById('role-display').innerText = "(Tổng Quản Trị)";
-                document.getElementById('admin-tab-menu').style.display = 'block';
-                document.getElementById('admin-selector-box').style.display = 'block'; 
-                loadAllUsersForAdmin(); 
-            } else {
-                document.getElementById('role-display').innerText = "(Thành Viên)";
-                document.getElementById('admin-tab-menu').style.display = 'none';
-                document.getElementById('admin-selector-box').style.display = 'none';
-                targetOwner = loggedInUserEmail.split('@')[0];
-                listenToDeviceData(targetOwner); 
-            }
+            // 1. Đọc nhanh toàn bộ danh sách User hiện hữu trên Database để kiểm tra chuyên sâu
+            database.ref('manager_devices').once('value').then((snapshot) => {
+                const allData = snapshot.val() || {};
+                const existingUsers = Object.keys(allData).map(key => key.toLowerCase().trim());
+
+                // Kiểm tra xem email đăng nhập có thuộc nhóm Admin cố định không
+                const isAdmin = adminEmails.map(email => email.toLowerCase().trim()).includes(loggedInUserEmail);
+                
+                // Kiểm tra xem tên tiền tố (uKey) có tồn tại trong các nhánh dữ liệu của Database không
+                const isExistingUser = existingUsers.includes(currentPrefixKey);
+
+                // THẰNG NÀY LẠ HOẮC: Không phải Admin cũng không có tên trong danh sách User hiện hữu -> CHẶN
+                if (!isAdmin && !isExistingUser) {
+                    alert("Thông báo: Vui lòng liên hệ email TMTool.Admin@gmail.com để cấp user.");
+                    auth.signOut(); // Đăng xuất ngay lập tức
+                    return;
+                }
+
+                // Nếu vượt qua bộ lọc chặn phía trên, bắt đầu phân quyền giao diện:
+                document.getElementById('login-form').style.display = 'none';
+                document.getElementById('dashboard').style.display = 'block';
+                document.getElementById('user-display').innerText = loggedInUserEmail;
+
+                if (isAdmin) {
+                    // Cấu hình giao diện đặc quyền Tổng Quản Trị (Admin)
+                    document.getElementById('role-display').innerText = "(Tổng Quản Trị)";
+                    document.getElementById('admin-tab-menu').style.display = 'block';
+                    document.getElementById('admin-selector-box').style.display = 'block'; 
+                    loadAllUsersForAdmin(); 
+                } else {
+                    // Cấu hình giao diện dành cho Thành Viên thường hiện hữu
+                    document.getElementById('role-display').innerText = "(Thành Viên)";
+                    document.getElementById('admin-tab-menu').style.display = 'none';
+                    document.getElementById('admin-selector-box').style.display = 'none';
+                    
+                    targetOwner = currentPrefixKey; // Gán nhánh dữ liệu mục tiêu bằng chính tên của user thường
+                    listenToDeviceData(targetOwner); // Chỉ lắng nghe và hiển thị máy của riêng mình
+                }
+
+            }).catch((error) => {
+                // Trường hợp Rules Firebase chặn không cho đọc (do chưa phân quyền đọc root cho user thường)
+                // Ta dùng phương án dự phòng: Thử lắng nghe trực tiếp vào nhánh riêng của họ xem có tồn tại không.
+                const currentPrefixKey = loggedInUserEmail.split('@')[0];
+                const isAdmin = adminEmails.map(email => email.toLowerCase().trim()).includes(loggedInUserEmail);
+
+                if (isAdmin) {
+                    document.getElementById('login-form').style.display = 'none';
+                    document.getElementById('dashboard').style.display = 'block';
+                    document.getElementById('user-display').innerText = loggedInUserEmail;
+                    document.getElementById('role-display').innerText = "(Tổng Quản Trị)";
+                    document.getElementById('admin-tab-menu').style.display = 'block';
+                    document.getElementById('admin-selector-box').style.display = 'block'; 
+                    loadAllUsersForAdmin();
+                } else {
+                    // Kiểm tra nhánh riêng của user thường xem có dữ liệu hoặc đã được khởi tạo (KHOI_TAO) chưa
+                    database.ref(`manager_devices/${currentPrefixKey}`).once('value').then((subSnap) => {
+                        if (subSnap.exists()) {
+                            document.getElementById('login-form').style.display = 'none';
+                            document.getElementById('dashboard').style.display = 'block';
+                            document.getElementById('user-display').innerText = loggedInUserEmail;
+                            document.getElementById('role-display').innerText = "(Thành Viên)";
+                            document.getElementById('admin-tab-menu').style.display = 'none';
+                            document.getElementById('admin-selector-box').style.display = 'none';
+                            
+                            targetOwner = currentPrefixKey;
+                            listenToDeviceData(targetOwner);
+                        } else {
+                            alert("Thông báo: Vui lòng liên hệ email TMTool.Admin@gmail.com để cấp user.");
+                            auth.signOut();
+                        }
+                    }).catch(() => {
+                        alert("Thông báo: Vui lòng liên hệ email TMTool.Admin@gmail.com để cấp user.");
+                        auth.signOut();
+                    });
+                }
+            });
+
         } else {
             document.getElementById('login-form').style.display = 'block';
             document.getElementById('dashboard').style.display = 'none';
@@ -389,7 +455,6 @@
             if(data.keyAuthenticator !== undefined) document.getElementById('f-keyAuthenticator').value = data.keyAuthenticator;
             if(data.glToken !== undefined) document.getElementById('f-glToken').value = data.glToken;
             
-            // Đồng bộ ánh xạ glUserName
             if(data.glUserName !== undefined) document.getElementById('f-glUserName').value = data.glUserName;
             else if(data.glToken !== undefined) document.getElementById('f-glUserName').value = data.glToken;
             
@@ -576,7 +641,6 @@
                     activeCommand = commandObj.action || "none";
                 }
 
-                // CỘNG TỔNG DOANH THU ĐÚNG CHUẨN
                 totalEarnToday += parseInt(acc.earnToday || acc.earn_today) || 0;
                 totalJobSuccessToday += parseInt(acc.jobSuccessToday || acc.job_success_today) || 0;
                 totalJobToday += parseInt(acc.jobToday || acc.job_today) || 0;
@@ -598,7 +662,6 @@
             }
         }
 
-        // UPDATE GIAO DIỆN CHỈ SỐ
         document.getElementById('sum-money-today').innerText = totalEarnToday.toLocaleString('vi-VN') + "đ";
         let calcPercent = totalJobToday > 0 ? Math.round((totalJobSuccessToday / totalJobToday) * 100) : 0;
         document.getElementById('sum-job-today').innerText = `${totalJobSuccessToday.toLocaleString('vi-VN')} / ${totalJobToday.toLocaleString('vi-VN')} (${calcPercent}%)`;
