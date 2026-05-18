@@ -237,7 +237,7 @@
         <div class="tabs-left">
             <button class="tab-link active" onclick="openTab(event, 'tab-monitor')">📊 Bảng Thiết Bị</button>
             <button class="tab-link" id="add-device-tab-menu" onclick="openTab(event, 'tab-add-device')">➕ Thêm Máy</button>
-            <button class="tab-link" id="admin-tab-menu" style="display:none; color: #856404; background: #fff3cd;" onclick="openTab(event, 'tab-admin-mgr')">⚙️ Quản Lý Thành Viên</button>
+			<button class="tab-btn" style=" color: #856404; background: #fff3cd;" onclick="openTab(event, 'tab-settings')">⚙️ Cài đặt</button>
         </div>
 
         <div class="actions-right">
@@ -330,7 +330,56 @@
             </div>
         </div>
     </div>
+	<div id="tab-settings" class="tab-content">
+		<div style="display: grid; grid-template-columns: 1fr; gap: 20px;">
+			
+			<div class="card pc-only" style="background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
+				<h3 style="margin-top:0; color: #2c3e50;"><i class="fas fa-table"></i> Cấu hình các cột hiển thị (Chỉ áp dụng trên PC)</h3>
+				<p style="color: #666; margin-bottom: 15px;">Kéo thả hoặc tích chọn để Ẩn/Hiện và Thay đổi thứ tự hiển thị các cột dữ liệu trên bảng điều khiển.</p>
+				
+				<div id="column-settings-container" style="display: flex; flex-direction: column; gap: 8px; max-width: 500px; margin-bottom: 15px;">
+					</div>
+				<button onclick="saveColumnSettings()" style="background: #27ae60; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; font-weight: bold;">
+					💾 Lưu cấu hình cột
+				</button>
+			</div>
+			<div class="card mobile-only" style="background: #fff3cd; color: #856404; padding: 15px; border-radius: 8px;">
+				⚠️ Các tùy chỉnh ẩn/hiện và thứ tự cột không áp dụng trên giao diện điện thoại (Mobile).
+			</div>
 
+			<div class="card admin-only" id="admin-management-section" style="background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); display: none;">
+				
+				<h3 style="margin-top:0; color:#856404;">Cấp Tài Khoản Thành Viên Mới</h3>
+				<div style="display: flex; gap: 10px; flex-wrap: wrap; align-items: flex-end;">
+					<div style="flex: 2; min-width: 200px;">
+						<label style="font-weight:bold;">Email Đăng Ký:</label>
+						<input type="email" id="new-user-email" placeholder="user@gmail.com">
+					</div>
+					<div style="flex: 1; min-width: 150px;">
+						<label style="font-weight:bold;">Mật Khẩu:</label>
+						<input type="text" id="new-user-password" placeholder="Tối thiểu 6 ký tự">
+					</div>
+					<button onclick="adminCreateUser()" style="background-color: #28a745; height: 35px; margin-bottom: 5px;">Tạo Thành Viên</button>
+				</div>
+				<h3>📋 Quản Lý Nhánh Dữ Liệu</h3>
+				<div class="summary-badge">Tổng số thành viên: <span id="total-users-count" style="color:red;">0</span></div>
+				<table>
+					<thead>
+						<tr style="background-color: #555;">
+							<th style="color:white;text-align:center;width:50px;">STT</th>
+							<th style="color:white;">Tên User</th>
+							<th style="color:white;text-align:center;">Số liệu</th>
+							<th style="color:white;text-align:center;">Hành Động</th>
+						</tr>
+					</thead>
+					<tbody id="admin-user-table-body"></tbody>
+				</table>
+
+			</div>
+        </div>
+
+        
+	</div>
     <div id="tab-admin-mgr" class="tab-content">
         <div class="panel-box" style="border-color: #ffeeba; background: #fffdf5;">
             <h3 style="margin-top:0; color:#856404;">Cấp Tài Khoản Thành Viên Mới</h3>
@@ -385,7 +434,34 @@ let activePhoneFilter = "";
 let currentSortField = "phoneId";
 let isSortAsc = true;
 
+// Cấu hình các cột có thể tùy chỉnh (Cố định các cột đầu: STT, Thiết bị, Tài khoản, Loại tài khoản và các cột hành động cuối)
+const AVAILABLE_COLUMNS = [
+    { id: 'appTT', label: 'App TT' },
+    { id: 'userGroup', label: 'Nhóm' },
+    { id: 'emailTT', label: 'Email' },
+    { id: 'passwordTT', label: 'Mật khẩu' },
+    { id: 'passwordEmail', label: 'Mật khẩu Mail' },
+    { id: 'platformId', label: 'Platform ID' },
+    { id: 'glID', label: 'Golike ID' },
+    { id: 'keyAuthenticator', label: '2FA Key' },
+    { id: 'glToken', label: 'Golike Token' },
+    { id: 'glUsername', label: 'Golike User' },
+    { id: 'userCookie', label: 'Cookie' },
+    { id: 'tuongTacAccount', label: 'Tương tác' },
+    { id: 'logGmail', label: 'Log Gmail' },
+    { id: 'logPassword', label: 'Log Pass' },
+    { id: 'status', label: 'Trạng thái' },
+    { id: 'todayMillis', label: 'Thời gian chạy' },
+    { id: 'lastMsg', label: 'Nhật ký' }
+];
 
+// Hàm lấy cấu hình cột hiện tại từ localStorage hoặc mặc định hiển thị hết
+function getColumnConfig() {
+    const saved = localStorage.getItem('tmtool_column_config');
+    if (saved) return JSON.parse(saved);
+    // Mặc định: hiện tất cả theo thứ tự khai báo ban đầu
+    return AVAILABLE_COLUMNS.map((col, index) => ({ ...col, visible: true, order: index }));
+}
 
 
     // Hàm chuyển đổi mili-giây sang định dạng DD/MM hh:mm
@@ -398,6 +474,18 @@ function formatTime(millis) {
     const mins = String(date.getMinutes()).padStart(2, '0');
     return `${day}/${month} ${hours}:${mins}`;
 }
+
+// Cập nhật lại logic phân quyền hiển thị khi đăng nhập thành công
+// Tìm chỗ xử lý phân quyền Admin cũ (Ví dụ chỗ kiểm tra adminEmail) bổ sung thêm:
+function checkAdminUI(email) {
+    const isAdmin = (email === "admin@gmail.com" || email === "tue@gmail"); // Thay bằng email admin chuẩn của anh
+    const adminSection = document.getElementById('admin-management-section');
+    if(adminSection) {
+        adminSection.style.display = isAdmin ? 'block' : 'none';
+    }
+}
+
+
 auth.onAuthStateChanged((user) => {
     if (user) {
         loggedInUserEmail = user.email;
@@ -406,12 +494,22 @@ auth.onAuthStateChanged((user) => {
         document.getElementById('user-display').innerText = loggedInUserEmail;
         if (loggedInUserEmail === "admin@gmail.com") {
             document.getElementById('role-display').innerText = "(Tổng Quản Trị)";
-            document.getElementById('admin-tab-menu').style.display = 'block';
+            
+			document.getElementById('admin-management-section').style.display = 'block';
             document.getElementById('admin-selector-box').style.display = 'flex';
             loadAllUsersForAdmin();
         } else {
             document.getElementById('role-display').innerText = "(Thành Viên)";
-            document.getElementById('admin-tab-menu').style.display = 'none';
+            
+			document.getElementById('admin-management-section').style.display = 'none';
+			
+			
+			
+			
+			
+			
+			
+			
             document.getElementById('admin-selector-box').style.display = 'none';
             targetOwner = loggedInUserEmail.split('@')[0];
             listenToDeviceData(targetOwner);
@@ -421,6 +519,185 @@ auth.onAuthStateChanged((user) => {
         document.getElementById('dashboard').style.display = 'none';
     }
 });
+
+
+// Hàm hiển thị danh sách cấu hình cột trong Tab Cài đặt
+function renderColumnSettingsUI() {
+    const config = getColumnConfig();
+    const container = document.getElementById('column-settings-container');
+    if(!container) return;
+    
+    // Sắp xếp mảng cấu hình theo trường order hiện tại để hiển thị đúng thứ tự
+    config.sort((a, b) => a.order - b.order);
+    
+    container.innerHTML = '';
+    config.forEach((col, index) => {
+        const div = document.createElement('div');
+        div.style = "display: flex; align-items: center; justify-content: space-between; padding: 8px; background: #f8f9fa; border: 1px solid #e2e8f0; border-radius: 4px;";
+        
+        div.innerHTML = `
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <input type="checkbox" id="chk-col-${col.id}" ${col.visible ? 'checked' : ''} style="cursor:pointer;">
+                <label for="chk-col-${col.id}" style="font-weight: bold; cursor:pointer;">${col.label}</label>
+            </div>
+            <div style="display: flex; gap: 4px;">
+                <button onclick="moveColumnOrder('${col.id}', -1)" ${index === 0 ? 'disabled' : ''} style="padding: 2px 6px; cursor: pointer;">▲</button>
+                <button onclick="moveColumnOrder('${col.id}', 1)" ${index === config.length - 1 ? 'disabled' : ''} style="padding: 2px 6px; cursor: pointer;">▼</button>
+            </div>
+        `;
+        container.appendChild(div);
+    });
+}
+// Cập nhật lại logic phân quyền hiển thị khi đăng nhập thành công
+// Tìm chỗ xử lý phân quyền Admin cũ (Ví dụ chỗ kiểm tra adminEmail) bổ sung thêm:
+
+
+// Thay đổi thứ tự vị trí cột (Lên / Xuống)
+function moveColumnOrder(colId, direction) {
+    let config = getColumnConfig();
+    config.sort((a, b) => a.order - b.order);
+    
+    const index = config.findIndex(c => c.id === colId);
+    if(index === -1) return;
+    
+    const targetIndex = index + direction;
+    if(targetIndex < 0 || targetIndex >= config.length) return;
+    
+    // Tráo đổi vị trí order
+    const tempOrder = config[index].order;
+    config[index].order = config[targetIndex].order;
+    config[targetIndex].order = tempOrder;
+    
+    localStorage.setItem('tmtool_column_config', JSON.stringify(config));
+    renderColumnSettingsUI();
+}
+
+// Lưu trạng thái Ẩn/Hiện từ checkbox
+function saveColumnSettings() {
+    let config = getColumnConfig();
+    config.forEach(col => {
+        const chk = document.getElementById(`chk-col-${col.id}`);
+        if(chk) {
+            col.visible = chk.checked;
+        }
+    });
+    localStorage.setItem('tmtool_column_config', JSON.stringify(config));
+    alert("✓ Đã lưu cấu hình hiển thị cột! Bảng điều khiển sẽ tự động cập nhật.");
+    // Load lại bảng dữ liệu PC để áp dụng cấu hình mới luôn
+    if(typeof lastRenderedData !== 'undefined') {
+        renderMonitorTablePC(lastRenderedData);
+    } else {
+        location.reload();
+    }
+}
+
+
+// Biến lưu tạm dữ liệu để render lại khi đổi cấu hình cột không cần tải lại Firebase
+let lastRenderedData = null; 
+
+function renderMonitorTablePC(data) {
+    lastRenderedData = data; // lưu lại dữ liệu gốc
+    const container = document.getElementById('monitor-table-container-pc'); // ID khu vực chứa bảng PC của anh
+    if(!container) return;
+
+    // Lấy cấu hình cột hiện tại đã sắp xếp theo thứ tự
+    const colConfig = getColumnConfig().sort((a, b) => a.order - b.order);
+    
+    let html = `<table class="main-table" style="width:100%; border-collapse: collapse;"><thead><tr>`;
+    
+    // 1. DỰNG TIÊU ĐỀ (THEAD)
+    // Các cột cố định ĐẦU không đổi
+    html += `<th>STT</th>`;
+    html += `<th>Thiết bị (PhoneID)</th>`;
+    html += `<th>Tài khoản (Username)</th>`;
+    html += `<th>Loại tài khoản</th>`;
+    
+    // Các cột có thể tùy chỉnh động theo cài đặt
+    colConfig.forEach(col => {
+        if(col.visible) {
+            html += `<th>${col.label}</th>`;
+        }
+    });
+    
+    // Các cột cố định HÀNH ĐỘNG ở CUỐI
+    html += `<th>Lệnh điều khiển</th>`;
+    html += `<th>Hành động</th>`;
+    html += `</tr></thead><tbody>`;
+    
+    // 2. DỰNG DỮ LIỆU (TBODY)
+    let stt = 1;
+    // Vòng lặp duyệt qua data Firebase của anh (đoạn này anh giữ nguyên logic bóc tách `phoneId`, `userName` cũ của anh nhé)
+    // Ví dụ cấu trúc vòng lặp bóc tách của anh:
+    for (let phoneId in data) {
+        const phoneData = data[phoneId];
+        if(!phoneData || phoneId === 'command' || phoneId === 'KHOI_TAO') continue;
+        
+        const accounts = phoneData.accounts || {};
+        for (let userName in accounts) {
+            const item = accounts[userName];
+            
+            html += `<tr>`;
+            // Cột cố định đầu
+            html += `<td>${stt++}</td>`;
+            html += `<td><strong>${phoneId}</strong></td>`;
+            html += `<td>${userName}</td>`;
+            html += `<td><span class="badge">${item.userType || ''}</span></td>`;
+            
+            // Render động các cột tùy biến theo đúng thứ tự sắp xếp và trạng thái hiển thị
+            colConfig.forEach(col => {
+                if(col.visible) {
+                    let cellValue = "";
+                    switch(col.id) {
+                        case 'appTT': cellValue = item.appTT || 0; break;
+                        case 'userGroup': cellValue = item.userGroup || 0; break;
+                        case 'emailTT': cellValue = item.emailTT || ''; break;
+                        case 'passwordTT': cellValue = item.passwordTT || ''; break;
+                        case 'passwordEmail': cellValue = item.passwordEmail || ''; break;
+                        case 'platformId': cellValue = item.platformId || ''; break;
+                        case 'glID': cellValue = item.glID || ''; break;
+                        case 'keyAuthenticator': cellValue = item.keyAuthenticator || ''; break;
+                        case 'glToken': cellValue = item.glToken || ''; break;
+                        case 'glUsername': cellValue = item.glUsername || ''; break;
+                        case 'userCookie': cellValue = `<input type="text" value="${item.userCookie || ''}" readonly style="width:60px;" onclick="this.select()">`; break;
+                        case 'tuongTacAccount': cellValue = item.tuongTacAccount ? "Có" : "Không"; break;
+                        case 'logGmail': cellValue = item.logGmail ? "Bật" : "Tắt"; break;
+                        case 'logPassword': cellValue = item.logPassword ? "Bật" : "Tắt"; break;
+                        case 'status': 
+                            let statusColor = item.status === "RUNNING" ? "#2ecc71" : "#e74c3c";
+                            cellValue = `<span style="color:${statusColor}; font-weight:bold;">${item.status || 'STOPPED'}</span>`; 
+                            break;
+                        case 'todayMillis': 
+                            cellValue = item.todayMillis ? new Date(item.todayMillis).toLocaleTimeString() : '-'; 
+                            break;
+                        case 'lastMsg': cellValue = item.lastMsg || ''; break;
+                    }
+                    html += `<td>${cellValue}</td>`;
+                }
+            });
+            
+            // Cột cố định cuối (Hành động / Bắn lệnh)
+            // Giữ nguyên đoạn code sinh `select` bắn lệnh gửi command và nút Sửa/Xóa tài khoản hiện tại của anh sang đây
+            html += `<td>
+                <select id="cmd-select-${phoneId}-${userName}" onchange="sendCommandDirect('${phoneId}','${userName}')">
+                    <option value="">-- Chọn lệnh --</option>
+                    <option value="START">START</option>
+                    <option value="STOP">STOP</option>
+                </select>
+            </td>`;
+            html += `<td>
+                <button onclick="openEditAccount('${phoneId}','${userName}')">Sửa</button>
+                <button onclick="deleteAccount('${phoneId}','${userName}')">Xóa</button>
+            </td>`;
+            
+            html += `</tr>`;
+        }
+    }
+    
+    html += `</tbody></table>`;
+    container.innerHTML = html;
+}
+
+
 
 function loginWithEmail() {
     const email = document.getElementById('email').value.trim();
@@ -942,21 +1219,50 @@ function deleteSingleAccount(phoneId, userName) {
     });
 }
 
-function openTab(evt, tabId) {
-    const contents = document.getElementsByClassName("tab-content");
-    for (let i = 0; i < contents.length; i++) contents[i].style.display = "none";
-    const links = document.getElementsByClassName("tab-link");
-    for (let i = 0; i < links.length; i++) links[i].classList.remove("active");
-    
-    document.getElementById(tabId).style.display = "block";
-    if (evt) evt.currentTarget.classList.add("active");
-    else {
-        const menus = document.getElementsByClassName("tab-link");
-        for(let m of menus) {
-            if(m.getAttribute('onclick').includes(tabId)) m.classList.add('active');
+function openTab(evt, tabName) {
+    const tabcontent = document.getElementsByClassName("tab-content");
+    const tablinks = document.getElementsByClassName("tab-btn");
+
+    // Ẩn tất cả tab
+    for (let i = 0; i < tabcontent.length; i++) {
+        tabcontent[i].style.display = "none";
+    }
+
+    // Remove active
+    for (let i = 0; i < tablinks.length; i++) {
+        tablinks[i].classList.remove("active");
+    }
+
+    // Hiện tab được chọn
+    const tab = document.getElementById(tabName);
+    if (tab) {
+        tab.style.display = "block";
+    }
+
+    // Active nút
+    if (evt) {
+        evt.currentTarget.classList.add("active");
+    } else {
+        for (let i = 0; i < tablinks.length; i++) {
+            const onclickAttr = tablinks[i].getAttribute("onclick");
+
+            if (onclickAttr && onclickAttr.includes(tabName)) {
+                tablinks[i].classList.add("active");
+                break;
+            }
         }
     }
+
+    // Logic riêng tab settings
+    if (tabName === "tab-settings") {
+        renderColumnSettingsUI();
+
+        
+    }
 }
+
+   
+
 
 function parseQuickJsonField(val) {
     const status = document.getElementById('json-parse-status');
