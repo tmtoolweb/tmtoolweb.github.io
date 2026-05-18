@@ -385,6 +385,19 @@ let activePhoneFilter = "";
 let currentSortField = "phoneId";
 let isSortAsc = true;
 
+
+
+
+    // Hàm chuyển đổi mili-giây sang định dạng DD/MM hh:mm
+function formatTime(millis) {
+    if (!millis || millis === 0 || isNaN(millis)) return "-";
+    const date = new Date(Number(millis));
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const hours = String(date.getHours()).padStart(2, '0');
+    const mins = String(date.getMinutes()).padStart(2, '0');
+    return `${day}/${month} ${hours}:${mins}`;
+}
 auth.onAuthStateChanged((user) => {
     if (user) {
         loggedInUserEmail = user.email;
@@ -727,7 +740,7 @@ function rebuildTableAndFilters() {
             <td><div class="limit-cell" style="color:#28a745; font-weight:bold;">${item.glUsername}</div></td>
             <td><div class="limit-cell" title="${item.userCookie}">${item.userCookie}</div></td>
             <td><b style="color: #495057;">${item.platformId}</b></td>
-            <td>${item.todayMillis}</td>
+            <td><b style="color: #0056b3;">${formatTime(item.todayMillis)}</b></td>
         `;
         tbody.appendChild(tr);
 
