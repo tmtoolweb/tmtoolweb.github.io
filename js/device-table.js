@@ -56,7 +56,7 @@ function renderMonitorTablePC(data) {
     const filterSelect = document.getElementById('device-filter-select');
     const activeFilter = filterSelect ? filterSelect.value : "";
 
-    // Cấu hình các cột hiển thị chuẩn
+    // Cấu hình danh sách các cột chuẩn
     const defaultCols = [
         { id: "col-action", label: "Hành Động" },
         { id: "col-status", label: "Trạng Thái" },
@@ -99,12 +99,7 @@ function renderMonitorTablePC(data) {
         cols = defaultCols.map(c => ({ ...c, visible: true }));
     }
 
-    let html = `<table><thead><tr>`;
-    cols.forEach(c => {
-        if (c.visible !== false) html += `<th>${c.label}</th>`;
-    });
-    html += `</tr></thead><tbody>`;
-
+    // 1. BÓC TÁCH DỮ LIỆU THÀNH MẢNG PHẲNG ĐỂ CHUẨN BỊ SORT
     let flatRows = [];
     Object.keys(data).forEach(phoneId => {
         if (['SYSTEM_PASSWORD_SET', 'KHOI_TAO', 'auth_config', 'devices'].includes(phoneId)) return;
@@ -158,6 +153,53 @@ function renderMonitorTablePC(data) {
         });
     });
 
+    // 🚀 2. THỰC HIỆN LOGIC SẮP XẾP (SORT) DỮ LIỆU TRÊN MẢNG PHẲNG
+    if (currentSortCol) {
+        flatRows.sort((a, b) => {
+            let valA = "", valB = "";
+            
+            // Ánh xạ id cột sang thuộc tính dữ liệu tương ứng của object
+            if (currentSortCol === "col-phoneId") { valA = a.phoneId; valB = b.phoneId; }
+            else if (currentSortCol === "col-userName") { valA = a.userName; valB = b.userName; }
+            else if (currentSortCol === "col-status") { valA = a.status; valB = b.status; }
+            else if (currentSortCol === "col-command") { valA = a.activeCommand; valB = b.activeCommand; }
+            else if (currentSortCol === "col-userType") { valA = a.userType; valB = b.userType; }
+            else if (currentSortCol === "col-appTT") { valA = Number(a.appTT); valB = Number(b.appTT); }
+            else if (currentSortCol === "col-userGroup") { valA = Number(a.userGroup); valB = Number(b.userGroup); }
+            else if (currentSortCol === "col-log") { valA = a.msgHistory; valB = b.msgHistory; }
+            else if (currentSortCol === "col-emailTT") { valA = a.emailTT; valB = b.emailTT; }
+            else if (currentSortCol === "col-todayMillis") { valA = Number(a.todayMillis); valB = Number(b.todayMillis); }
+            else if (currentSortCol === "col-platformId") { valA = a.platformId; valB = b.platformId; }
+            else { valA = a.userName; valB = b.userName; } // Mặc định
+
+            // Hỗ trợ so sánh chuỗi tiếng Việt hoặc text thường không phân biệt hoa thường
+            if (typeof valA === "string") {
+                return isSortAsc ? valA.localeCompare(valB) : valB.localeCompare(valA);
+            } else {
+                // So sánh số (millis, số máy, appTT)
+                return isSortAsc ? (valA - valB) : (valB - valA);
+            }
+        });
+    }
+
+    // 3. DỰNG TIÊU ĐỀ BẢNG THÊM ICON MŨI TÊN CHỈ HƯỚNG SORT
+    let html = `<table><thead><tr>`;
+    cols.forEach(c => {
+        if (c.visible !== false) {
+            let arrow = "";
+            if (c.id === currentSortCol) {
+                arrow = isSortAsc ? " ▲" : " ▼";
+            }
+            // Thêm style cursor pointer và thuộc tính onclick để nhấn vào tiêu đề là sort được luôn
+            if (c.id !== "col-action") {
+                html += `<th onclick="toggleSortPC('${c.id}')" style="cursor: pointer; user-select: none;" title="Bấm để sắp xếp">${c.label}<span style="color:#ffc107;">${arrow}</span></th>`;
+            } else {
+                html += `<th>${c.label}</th>`; // Cột hành động không cần sort
+            }
+        }
+    });
+    html += `</tr></thead><tbody>`;
+
     if (flatRows.length === 0) {
         html += `<tr><td colspan="${cols.filter(c=>c.visible!==false).length}" style="text-align:center; color:#999;">Không có dữ liệu.</td></tr>`;
     } else {
@@ -170,7 +212,6 @@ function renderMonitorTablePC(data) {
             cols.forEach(c => {
                 if (c.visible === false) return;
                 
-                // KHÔI PHỤC CỘT HÀNH ĐỘNG: Gồm Icon Sửa/Xóa nhỏ & Bộ dropbox start lệnh bên dưới
                 if (c.id === "col-action") {
                     html += `
                     <td>
@@ -199,9 +240,7 @@ function renderMonitorTablePC(data) {
                     </td>`;
                 } else if (c.id === "col-status") {
                     html += `<td style="font-weight:bold;" class="${isRunning ? 'status-running' : 'status-stopped'}">${item.status}</td>`;
-                } 
-                // KHÔI PHỤC CỘT LỆNH CHỜ: Đọc text tĩnh từ data Firebase ra như cũ
-                else if (c.id === "col-command") {
+                } else if (c.id === "col-command") {
                     html += `<td><span class="cmd-badge ${item.activeCommand !== 'NONE' ? 'cmd-active' : 'cmd-none'}">${item.activeCommand}</span></td>`;
                 } else if (c.id === "col-phoneId") {
                     html += `<td style="font-weight:bold; color:#007bff;">${item.phoneId}</td>`;
