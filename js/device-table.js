@@ -1,3 +1,5 @@
+let currentSortCol = "";  // Lưu id cột đang được chọn để sort (ví dụ: "col-phoneId")
+let isSortAsc = true;     // true: tăng dần (A-Z), false: giảm dần (Z-A)
 // Hàm định dạng thời gian chạy máy
 function formatTime(millis) {
     if (!millis || isNaN(millis)) return "-";
