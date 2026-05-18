@@ -326,3 +326,122 @@ function toggleSortPC(columnId) {
         renderMonitorTablePC(globalCachedDevices);
     }
 }
+// HÀM DỰNG GIAO DIỆN THEO DẠNG THẺ (CARDS) TRÊN MOBILE
+function renderMobileCards(flatRows) {
+    const mbody = document.getElementById('devices-mobile-body');
+    if (!mbody) return;
+
+    // Xóa sạch dữ liệu thẻ cũ trước khi nạp dữ liệu realtime mới
+    mbody.innerHTML = "";
+
+    if (!flatRows || flatRows.length === 0) {
+        mbody.innerHTML = `<div style="text-align:center; padding:20px; color:#999; background:#fff; border-radius:8px;">Không có dữ liệu thiết bị.</div>`;
+        return;
+    }
+
+    // Duyệt qua từng tài khoản trong danh sách phẳng để dựng thẻ mobile riêng biệt
+    flatRows.forEach(item => {
+        const isRunning = item.status === "RUNNING";
+        const safeUserKey = item.userName.replace(/[^a-zA-Z0-9]/g, '_');
+        
+        // Tạo một khối thẻ (Card) bọc toàn bộ thông tin của 1 tài khoản
+        const card = document.createElement('div');
+        card.className = `mobile-device-card ${isRunning ? 'farming-highlight' : ''}`;
+        
+        // Cấu trúc Style nội bộ cho thẻ Mobile gọn gàng, trực quan
+        card.style.cssText = `
+            background: #ffffff;
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 12px;
+            border: 1px solid #e0e0e0;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        `;
+
+        card.innerHTML = `
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; border-bottom: 1px dashed #eee; padding-bottom: 6px;">
+                <div>
+                    <span style="font-weight: bold; color: #007bff; font-size: 14px;">📱 Máy: ${item.phoneId}</span>
+                    <span style="margin: 0 4px; color: #ccc;">|</span>
+                    <span style="font-weight: bold; color: #333; font-size: 13px;">👤 ${item.userName}</span>
+                </div>
+                <span style="background: #e1f5fe; color: #0288d1; padding: 2px 6px; border-radius: 4px; font-weight: bold; font-size: 11px;">
+                    ${item.userType}
+                </span>
+            </div>
+
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                <div>
+                    <span style="color: #666;">Trạng thái: </span>
+                    <span style="font-weight: bold;" class="${isRunning ? 'status-running' : 'status-stopped'}">${item.status}</span>
+                </div>
+                <div>
+                    <span style="color: #666;">Lệnh chờ: </span>
+                    <span class="cmd-badge ${item.activeCommand !== 'NONE' ? 'cmd-active' : 'cmd-none'}" style="font-size: 11px; padding: 2px 6px;">
+                        ${item.activeCommand}
+                    </span>
+                </div>
+            </div>
+
+            <div style="background: #f8f9fa; padding: 6px 8px; border-radius: 4px; font-size: 11px; color: #555; margin-bottom: 12px; word-break: break-all; max-height: 40px; overflow: hidden; text-overflow: ellipsis;" title="${item.msgHistory}">
+                <strong>Log:</strong> ${item.msgHistory || "Không có nhật ký"}
+            </div>
+
+            <div style="display: flex; flex-direction: column; gap: 8px; border-top: 1px solid #eee; padding-top: 10px;">
+                
+                <div style="display: flex; gap: 10px; justify-content: space-between; align-items: center;">
+                    <span style="font-size: 11px; color: #777; font-weight: 500;">Hành động hệ thống:</span>
+                    <div style="display: flex; gap: 6px;">
+                        <button class="btn-mini" style="background: #ffc107; color: #111; padding: 4px 10px; border-radius: 4px;" onclick="triggerEditMode('${item.phoneId}','${item.userName}')">
+                            <i class="fas fa-edit"></i> Sửa
+                        </button>
+                        <button class="btn-mini" style="background: #dc3545; color: white; padding: 4px 10px; border-radius: 4px;" onclick="deleteSingleAccount('${item.phoneId}','${item.userName}')">
+                            <i class="fas fa-trash-alt"></i> Xóa
+                        </button>
+                    </div>
+                </div>
+
+                <div style="display: flex; gap: 6px; align-items: center; margin-top: 2px;">
+                    <select style="flex: 1; padding: 4px; font-size: 12px; margin: 0; height: 32px; border-radius: 4px; border: 1px solid #ccc; background: #fff;" id="mobile-cmd-select-${item.phoneId}-${safeUserKey}">
+                        <option value="NONE">-- Chọn lệnh muốn chạy --</option>
+                        <option value="FARM_TIKTOK">FARM_TIKTOK</option>
+                        <option value="FARM_FACEBOOK">FARM_FACEBOOK</option>
+                        <option value="BUFF_LIKE">BUFF_LIKE</option>
+                        <option value="BUFF_FOLLOW">BUFF_FOLLOW</option>
+                        <option value="STOP">STOP</option>
+                    </select>
+                    <button style="background: #28a745; color: white; border: none; padding: 0 14px; border-radius: 4px; cursor: pointer; font-size: 12px; font-weight: bold; height: 32px; display: flex; align-items: center; gap: 4px;" 
+                            onclick="sendCommandDirectMobile('${item.phoneId}','${item.userName}')">
+                        <i class="fas fa-paper-plane"></i> Chạy
+                    </button>
+                </div>
+
+            </div>
+        `;
+        
+        mbody.appendChild(card);
+    });
+}
+
+// HÀM PHÁT LỆNH ĐIỀU KHIỂN RIÊNG BIỆT CHO INTERFACE MOBILE
+function sendCommandDirectMobile(phoneId, userName) {
+    if (!targetOwner || !phoneId || !userName) return;
+    const safeUserKey = userName.replace(/[^a-zA-Z0-9]/g, '_');
+    const selectEl = document.getElementById(`mobile-cmd-select-${phoneId}-${safeUserKey}`);
+    if (!selectEl) return;
+    
+    const chosenAction = selectEl.value;
+    if (chosenAction === "NONE") {
+        alert("Vui lòng lựa chọn một chế độ lệnh hành động cụ thể trước khi bấm Chạy!");
+        return;
+    }
+    
+    // Đẩy thông tin lệnh Realtime Firebase lên nút điều hướng của máy farm
+    database.ref(`manager_devices/${targetOwner}/${phoneId}/command`).set({
+        action: chosenAction,
+        userName: userName,
+        time: Date.now()
+    }).then(() => {
+        alert(`✓ Mobile: Đã phát lệnh [ ${chosenAction} ] đến thiết bị máy ${phoneId}`);
+    }).catch(e => alert("Lỗi gửi lệnh từ Mobile: " + e.message));
+}
