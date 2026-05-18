@@ -803,7 +803,7 @@ function handleSortClick(field) {
 
 function getAccountRef(phoneId, userName) {
     if(globalCachedDevices[phoneId] && globalCachedDevices[phoneId].accounts) {
-        return `manager_devices/${targetOwner}/devices/${phoneId}/accounts/${userName}`;
+        return `manager_devices/${targetOwner}/${phoneId}/accounts/${userName}`;
     }
     return `manager_devices/${targetOwner}/${phoneId}/${userName}`;
 }
@@ -814,8 +814,8 @@ function sendCommandDirect(phoneId, userName) {
     const cmd = sel.value;
     if(!targetOwner) return alert("Không tìm thấy chủ mục đồng bộ!");
     
-    // Set command vào nút command gốc của máy để tool dễ đọc, đồng thời update hiển thị
-    database.ref(`manager_devices/${targetOwner}/devices/${phoneId}/command`).set({
+    // SỬA TẠI ĐÂY: Bỏ đường dẫn 
+    database.ref(`manager_devices/${targetOwner}/${phoneId}/command`).set({
         action: cmd, userName: userName, userType: ""
     }).then(() => {
         database.ref(getAccountRef(phoneId, userName)).update({
@@ -831,7 +831,8 @@ function sendCommandDirectMobile(phoneId, userName) {
     const cmd = sel.value;
     if(!targetOwner) return alert("Không tìm thấy chủ mục đồng bộ!");
     
-    database.ref(`manager_devices/${targetOwner}/devices/${phoneId}/command`).set({
+    // SỬA TẠI ĐÂY: Bỏ đường dẫn 
+    database.ref(`manager_devices/${targetOwner}/${phoneId}/command`).set({
         action: cmd, userName: userName, userType: ""
     }).then(() => {
         database.ref(getAccountRef(phoneId, userName)).update({
@@ -926,7 +927,8 @@ function userAddDeviceManually() {
         payload.msgHistory = "Đã khởi tạo thủ công";
     }
 
-    database.ref(`manager_devices/${targetOwner}/devices/${pId}/accounts/${uName}`).update(payload).then(() => {
+    // SỬA TẠI ĐÂY: Bỏ nút để ghi thẳng vào phoneId
+    database.ref(`manager_devices/${targetOwner}/${pId}/accounts/${uName}`).update(payload).then(() => {
         alert("✓ Đã lưu cấu hình thiết bị thành công!");
         cancelEditMode();
         openTab(null, 'tab-monitor');
@@ -1026,12 +1028,14 @@ function handleExcelUpload() {
                 }
             });
 
-            if(count > 0 && targetOwner) {
-                database.ref(`manager_devices/${targetOwner}/devices`).update(updatePack).then(() => {
-                    status.innerText = `✓ Đã đồng bộ thành công ${count} tài khoản cấu hình từ Excel lên Cloud!`;
-                    input.value = "";
-                });
-            } else { alert("Không tìm thấy trường cấu hình hợp lệ!"); }
+			// Tìm đoạn cuối trong hàm handleExcelUpload() và sửa lại:
+			if(count > 0 && targetOwner) {
+				// SỬA TẠI ĐÂY: Bỏ 
+				database.ref(`manager_devices/${targetOwner}`).update(updatePack).then(() => {
+					status.innerText = `✓ Đã đồng bộ thành công ${count} tài khoản cấu hình từ Excel lên Cloud!`;
+					input.value = "";
+				});
+			} else { alert("Không tìm thấy trường cấu hình hợp lệ!"); }
         } catch(err) { alert("Lỗi phân tích file Excel: " + err.message); }
     };
     reader.readAsArrayBuffer(file);
@@ -1046,7 +1050,7 @@ function handleJsonUpload(input) {
         try {
             const data = JSON.parse(e.target.result);
             if(data && typeof data === 'object' && !Array.isArray(data)) {
-                database.ref(`manager_devices/${targetOwner}/devices`).update(data).then(() => {
+                database.ref(`manager_devices/${targetOwner}`).update(data).then(() => {
                     status.innerText = "✓ Khớp và đồng bộ JSON hoàn tất!"; status.style.color = "green";
                 });
             } else { status.innerText = "❌ Định dạng phải là JSON Object cây cấu trúc."; status.style.color = "red"; }
