@@ -1,0 +1,272 @@
+// Hàm định dạng thời gian chạy máy
+function formatTime(millis) {
+    if (!millis || isNaN(millis)) return "-";
+    const d = new Date(Number(millis));
+    return `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+}
+
+// 1. HÀM CỐT LÕI: Phân tích dữ liệu Firebase để nạp vào Dropbox và chuẩn bị bảng
+function rebuildTableAndFilters() {
+    const filterSelect = document.getElementById('device-filter-select');
+    if (!filterSelect) return;
+    
+    // Lưu lại thiết bị đang chọn lọc hiện tại
+    const preFilterVal = filterSelect.value;
+    filterSelect.innerHTML = '<option value="">-- Tất cả máy --</option>';
+    
+    if (!globalCachedDevices || Object.keys(globalCachedDevices).length === 0) {
+        const tbody = document.getElementById('devices-table-body');
+        if (tbody) tbody.innerHTML = `<tr><td colspan="20" style="text-align: center; color: #999;">Không có dữ liệu thiết bị.</td></tr>`;
+        return;
+    }
+    
+    let uniquePhones = new Set();
+
+    // Duyệt qua toàn bộ cấu trúc để tìm phoneId nạp vào Dropbox select máy
+    Object.keys(globalCachedDevices).forEach(phoneId => {
+        if(['SYSTEM_PASSWORD_SET', 'KHOI_TAO', 'auth_config', 'devices'].includes(phoneId)) return;
+        uniquePhones.add(phoneId);
+    });
+
+    // Nạp danh sách máy vào Dropbox lọc
+    Array.from(uniquePhones).sort().forEach(p => {
+        const opt = document.createElement('option');
+        opt.value = p; 
+        opt.innerText = `Máy: ${p}`;
+        if(p === preFilterVal) opt.selected = true;
+        filterSelect.appendChild(opt);
+    });
+
+    // 🚀 GỌI HÀM VẼ BẢNG PC VÀ MOBILE TỪ DỮ LIỆU ĐANG CÓ
+    renderMonitorTablePC(globalCachedDevices);
+}
+
+// 2. HÀM VẼ BẢNG MÁY TÍNH (PC): Khắc phục lỗi trắng bảng
+function renderMonitorTablePC(data) {
+    const container = document.getElementById('monitor-table-container-pc');
+    if (!container) return;
+
+    if (!data || Object.keys(data).length === 0) {
+        container.innerHTML = `<div style="text-align:center; padding:20px; color:#999;">Không có dữ liệu để hiển thị.</div>`;
+        return;
+    }
+
+    const filterSelect = document.getElementById('device-filter-select');
+    const activeFilter = filterSelect ? filterSelect.value : "";
+
+    // Cấu hình các cột hiển thị chuẩn
+    const defaultCols = [
+        { id: "col-action", label: "Hành Động" },
+        { id: "col-status", label: "Trạng Thái" },
+        { id: "col-command", label: "Lệnh Chờ" },
+        { id: "col-phoneId", label: "phoneId" },
+        { id: "col-userName", label: "userName" },
+        { id: "col-userType", label: "userType" },
+        { id: "col-appTT", label: "appTT" },
+        { id: "col-userGroup", label: "userGroup" },
+        { id: "col-tuongTac", label: "tuongTacAccount" },
+        { id: "col-log", label: "msgHistory (Log)" },
+        { id: "col-emailTT", label: "emailTT" },
+        { id: "col-passwordTT", label: "passwordTT" },
+        { id: "col-passwordEmail", label: "passwordEmail" },
+        { id: "col-glID", label: "glID" },
+        { id: "col-keyAuth", label: "keyAuthenticator" },
+        { id: "col-glUsername", label: "glUsername" },
+        { id: "col-userCookie", label: "userCookie" },
+        { id: "col-platformId", label: "platformId" },
+        { id: "col-todayMillis", label: "todayMillis" }
+    ];
+
+    let cols = [...defaultCols];
+    try {
+        const saved = localStorage.getItem(`tmtool_cols_${loggedInUserEmail || 'default'}`);
+        if (saved) {
+            let savedArr = JSON.parse(saved);
+            let validSaved = savedArr.filter(s => defaultCols.some(d => d.id === s.id));
+            defaultCols.forEach(d => {
+                if (!validSaved.some(v => v.id === d.id)) validSaved.push({ id: d.id, visible: true });
+            });
+            cols = validSaved.map(v => {
+                let found = defaultCols.find(d => d.id === v.id);
+                return { id: v.id, label: found ? found.label : v.id, visible: v.visible };
+            });
+        } else {
+            cols = defaultCols.map(c => ({ ...c, visible: true }));
+        }
+    } catch(e) {
+        cols = defaultCols.map(c => ({ ...c, visible: true }));
+    }
+
+    let html = `<table><thead><tr>`;
+    cols.forEach(c => {
+        if (c.visible !== false) html += `<th>${c.label}</th>`;
+    });
+    html += `</tr></thead><tbody>`;
+
+    let flatRows = [];
+    Object.keys(data).forEach(phoneId => {
+        if (['SYSTEM_PASSWORD_SET', 'KHOI_TAO', 'auth_config', 'devices'].includes(phoneId)) return;
+        if (activeFilter && phoneId !== activeFilter) return;
+
+        const phoneNode = data[phoneId] || {};
+        let accountsObj = {};
+
+        if (phoneNode.accounts && typeof phoneNode.accounts === 'object') {
+            accountsObj = phoneNode.accounts;
+        } else {
+            Object.keys(phoneNode).forEach(k => {
+                if (phoneNode[k] && typeof phoneNode[k] === 'object' && (phoneNode[k].userType || phoneNode[k].userName)) {
+                    accountsObj[k] = phoneNode[k];
+                }
+            });
+        }
+
+        const currentRun = phoneNode.current_running || {};
+        const commandObj = phoneNode.command || {};
+
+        if (Object.keys(accountsObj).length === 0) {
+            flatRows.push({
+                phoneId: phoneId, userName: "Chưa có tài khoản", userType: "-", status: "STOPPED", activeCommand: "NONE",
+                appTT: 0, userGroup: 0, tuongTacAccount: false, msgHistory: "Thiết bị trống", emailTT: "-",
+                passwordTT: "-", passwordEmail: "-", glID: "-", keyAuthenticator: "-", glUsername: "-", userCookie: "-", platformId: "-", todayMillis: 0
+            });
+        }
+
+        Object.keys(accountsObj).forEach(uName => {
+            const acc = accountsObj[uName] || {};
+            let finalStatus = acc.status || "STOPPED";
+            let finalMsg = acc.msgHistory || acc.log || "";
+            let finalCmd = acc.activeCommand || "NONE";
+
+            if (currentRun && currentRun.userName === uName) {
+                if (currentRun.status) finalStatus = currentRun.status;
+                if (currentRun.lastMsg) finalMsg = currentRun.lastMsg;
+            }
+            if (commandObj && commandObj.userName === uName && commandObj.action) {
+                finalCmd = commandObj.action;
+            }
+
+            flatRows.push({
+                phoneId: phoneId, userName: uName, userType: acc.userType || "", appTT: acc.appTT || 0, userGroup: acc.userGroup || 0,
+                tuongTacAccount: acc.tuongTacAccount || false, msgHistory: finalMsg, emailTT: acc.emailTT || "", passwordTT: acc.passwordTT || "",
+                passwordEmail: acc.passwordEmail || "", glID: acc.glID || 0, keyAuthenticator: acc.keyAuthenticator || "",
+                glUsername: acc.glUsername || "", userCookie: acc.userCookie || "", platformId: acc.platformId || "",
+                status: finalStatus, activeCommand: finalCmd, todayMillis: (currentRun && currentRun.userName === uName) ? (currentRun.todayMillis || acc.todayMillis || 0) : (acc.todayMillis || 0)
+            });
+        });
+    });
+
+    if (flatRows.length === 0) {
+        html += `<tr><td colspan="${cols.filter(c=>c.visible!==false).length}" style="text-align:center; color:#999;">Không có dữ liệu.</td></tr>`;
+    } else {
+        flatRows.forEach(item => {
+            const isRunning = item.status === "RUNNING";
+            const safeUserKey = item.userName.replace(/[^a-zA-Z0-9]/g, '_');
+            
+            html += `<tr class="${isRunning ? 'farming-highlight' : ''}">`;
+            
+            cols.forEach(c => {
+                if (c.visible === false) return;
+                
+                // KHÔI PHỤC CỘT HÀNH ĐỘNG: Gồm Icon Sửa/Xóa nhỏ & Bộ dropbox start lệnh bên dưới
+                if (c.id === "col-action") {
+                    html += `
+                    <td>
+                        <div style="display:flex; gap:8px; justify-content:center; margin-bottom:5px;">
+                            <button class="btn-mini" style="background:#ffc107; color:#111; padding:2px 6px;" title="Sửa tài khoản" onclick="triggerEditMode('${item.phoneId}','${item.userName}')">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="btn-mini" style="background:#dc3545; color:white; padding:2px 6px;" title="Xóa tài khoản" onclick="deleteSingleAccount('${item.phoneId}','${item.userName}')">
+                                <i class="fas fa-trash-alt"></i>
+                            </button>
+                        </div>
+                        <div style="display:flex; gap:3px; align-items:center;">
+                            <select style="padding:1px 2px; font-size:11px; margin:0; height:22px; width:105px;" id="pc-cmd-select-${item.phoneId}-${safeUserKey}">
+                                <option value="NONE">NONE</option>
+                                <option value="FARM_TIKTOK">FARM_TIKTOK</option>
+                                <option value="FARM_FACEBOOK">FARM_FACEBOOK</option>
+                                <option value="BUFF_LIKE">BUFF_LIKE</option>
+                                <option value="BUFF_FOLLOW">BUFF_FOLLOW</option>
+                                <option value="STOP">STOP</option>
+                            </select>
+                            <button style="background:#28a745; color:white; border:none; padding:0 6px; border-radius:3px; cursor:pointer; font-size:10px; font-weight:bold; height:22px;" 
+                                    onclick="sendCommandDirectPC('${item.phoneId}','${item.userName}')">
+                                Gửi
+                            </button>
+                        </div>
+                    </td>`;
+                } else if (c.id === "col-status") {
+                    html += `<td style="font-weight:bold;" class="${isRunning ? 'status-running' : 'status-stopped'}">${item.status}</td>`;
+                } 
+                // KHÔI PHỤC CỘT LỆNH CHỜ: Đọc text tĩnh từ data Firebase ra như cũ
+                else if (c.id === "col-command") {
+                    html += `<td><span class="cmd-badge ${item.activeCommand !== 'NONE' ? 'cmd-active' : 'cmd-none'}">${item.activeCommand}</span></td>`;
+                } else if (c.id === "col-phoneId") {
+                    html += `<td style="font-weight:bold; color:#007bff;">${item.phoneId}</td>`;
+                } else if (c.id === "col-userName") {
+                    html += `<td style="font-weight:bold;">${item.userName}</td>`;
+                } else if (c.id === "col-userType") {
+                    html += `<td><span style="background:#e1f5fe; color:#0288d1; padding:2px 6px; border-radius:4px; font-weight:bold;">${item.userType}</span></td>`;
+                } else if (c.id === "col-appTT") {
+                    html += `<td>${item.appTT}</td>`;
+                } else if (c.id === "col-userGroup") {
+                    html += `<td>${item.userGroup}</td>`;
+                } else if (c.id === "col-tuongTac") {
+                    html += `<td style="text-align:center;">${item.tuongTacAccount ? '✅' : '❌'}</td>`;
+                } else if (c.id === "col-log") {
+                    html += `<td class="limit-cell" title="${item.msgHistory}">${item.msgHistory}</td>`;
+                } else if (c.id === "col-emailTT") {
+                    html += `<td>${item.emailTT}</td>`;
+                } else if (c.id === "col-passwordTT") {
+                    html += `<td>${item.passwordTT}</td>`;
+                } else if (c.id === "col-passwordEmail") {
+                    html += `<td>${item.passwordEmail}</td>`;
+                } else if (c.id === "col-glID") {
+                    html += `<td>${item.glID}</td>`;
+                } else if (c.id === "col-keyAuth") {
+                    html += `<td>${item.keyAuthenticator}</td>`;
+                } else if (c.id === "col-glUsername") {
+                    html += `<td>${item.glUsername}</td>`;
+                } else if (c.id === "col-userCookie") {
+                    html += `<td class="limit-cell" title="${item.userCookie}">${item.userCookie}</td>`;
+                } else if (c.id === "col-platformId") {
+                    html += `<td>${item.platformId}</td>`;
+                } else if (c.id === "col-todayMillis") {
+                    html += `<td>${formatTime(item.todayMillis)}</td>`;
+                }
+            });
+            html += `</tr>`;
+        });
+    }
+
+    html += `</tbody></table>`;
+    container.innerHTML = html;
+
+    if (typeof renderMobileCards === 'function') {
+        renderMobileCards(flatRows);
+    }
+}
+
+// Hàm gửi lệnh xử lý riêng ký tự đặc biệt của userName
+function sendCommandDirectPC(phoneId, userName) {
+    if (!targetOwner || !phoneId || !userName) return;
+    const safeUserKey = userName.replace(/[^a-zA-Z0-9]/g, '_');
+    const selectEl = document.getElementById(`pc-cmd-select-${phoneId}-${safeUserKey}`);
+    if (!selectEl) return;
+    
+    const chosenAction = selectEl.value;
+    
+    database.ref(`manager_devices/${targetOwner}/${phoneId}/command`).set({
+        action: chosenAction,
+        userName: userName,
+        time: Date.now()
+    }).then(() => {
+        alert(`✓ Đã phát lệnh [ ${chosenAction} ] gửi tới máy ${phoneId}`);
+    }).catch(e => alert("Lỗi gửi lệnh: " + e.message));
+}
+
+// 3. HÀM SỰ KIỆN: Khi chuyển đổi giá trị Dropbox chọn máy
+function filterTableByPhoneId(val) {
+    // Chỉ cần gọi lại render, hàm sẽ tự động lấy giá trị mới từ Dropbox để lọc hàng xuất bản
+    renderMonitorTablePC(globalCachedDevices);
+}
