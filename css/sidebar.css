@@ -1,0 +1,55 @@
+#dashboard-layout {
+    display: flex;
+    min-height: 100vh; /* Full chiều cao màn hình thiết bị */
+    height: 100vh;
+    overflow: hidden;
+}
+
+.sidebar {
+    width: var(--sidebar-width);
+    background-color: var(--sidebar-bg);
+    color: #a2a3b7;
+    display: flex;
+    flex-direction: column;
+    height: 100vh; /* Ép Menu Sidebar dọc đủ màn hình */
+    z-index: 1000;
+    transition: all 0.3s ease;
+}
+.sidebar-brand {
+    height: var(--header-height);
+    display: flex;
+    align-items: center;
+    padding: 0 20px;
+    font-size: 18px;
+    font-weight: 700;
+    color: #fff;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    background: #1a1a27;
+}
+.sidebar-menu {
+    flex: 1;
+    padding: 15px 0;
+    overflow-y: auto;
+}
+.menu-item {
+    padding: 12px 20px;
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    font-size: 14px;
+    transition: all 0.2s;
+    border-left: 3px solid transparent;
+}
+.menu-item i { margin-right: 10px; font-size: 16px; width: 20px; text-align: center; }
+.menu-item:hover { background-color: var(--sidebar-hover); color: #fff; }
+.menu-item.active {
+    background-color: var(--sidebar-hover);
+    color: #fff;
+    border-left-color: var(--sidebar-active);
+}
+@media (max-width: 992px) {
+    .sidebar { position: fixed; left: -250px; height: 100vh; }
+    .sidebar.open { left: 0; }
+    .hamburger-btn { display: block; }
+    .sidebar-overlay.active { display: block; }
+}

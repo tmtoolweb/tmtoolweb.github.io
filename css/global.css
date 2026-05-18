@@ -1,0 +1,13 @@
+:root {
+    --sidebar-bg: #1e1e2d;         /* Màu tối chuyên nghiệp cho Sidebar */
+    --sidebar-active: #007bff;
+    --sidebar-width: 250px;
+    --header-height: 60px;
+    --bg-body: #f4f6f9;
+}
+body { font-family: -apple-system, sans-serif; background-color: var(--bg-body); margin:0; font-size:13px; color:#333; }
+button { padding: 8px 16px; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; }
+input, select { padding: 8px 12px; border: 1px solid #ced4da; border-radius: 6px; }
+.panel-box { background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
+.tab-content { display: none; }
+.tab-content.active { display: block; }

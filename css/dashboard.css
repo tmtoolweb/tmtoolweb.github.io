@@ -1,0 +1,111 @@
+/* Đảm bảo khung bao bố cục chiếm trọn vẹn 100% màn hình không bị hụt chân */
+html, body {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+}
+
+#dashboard-layout {
+    display: flex;
+    height: 100vh;
+    width: 100vw;
+    overflow: hidden;
+}
+
+
+
+/* Khung nội dung chính bên phải */
+.main-wrapper {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    overflow: hidden;
+}
+/* Vùng chứa Tab làm việc */
+.content-area {
+    flex: 1;
+    padding: 15px;
+    background: var(--bg-body);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+/* Khóa chặt Tab Monitor ở chế độ flex để dãn bảng xuống dưới */
+#tab-monitor.tab-content.active {
+    display: flex !important;
+    flex-direction: column;
+    flex: 1;
+    height: 100%;
+    overflow: hidden;
+}
+
+
+.top-header {
+    height: var(--header-height);
+    background: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 20px;
+    box-shadow: 0 1px 5px rgba(0,0,0,0.05);
+    z-index: 99;
+}
+.hamburger-btn { background: transparent; border: none; font-size: 20px; cursor: pointer; color: #555; display: none; padding: 5px; }
+.content-area { flex: 1; padding: 20px; overflow-y: auto; background: var(--bg-body); }
+.sidebar-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 999; display: none; }
+
+/* Kỹ thuật đóng băng cố định Freeze Columns của riêng TMTool */
+/* 🚀 SỬA QUAN TRỌNG: Bảng tự dãn full chiều cao và tạo nền trắng kịch đáy */
+.table-wrapper { 
+    flex: 1;               /* Tự động kéo dãn lấp đầy toàn bộ không gian còn trống */
+    overflow: auto;        /* Tự xuất hiện thanh cuộn ngang/dọc khi dữ liệu tràn */
+    border: 1px solid #dee2e6; 
+    background: #ffffff;   /* Giữ nền trắng full màn hình kể cả khi không có hàng dữ liệu */
+    border-radius: 6px; 
+    position: relative;
+}
+
+table { 
+    border-collapse: separate; 
+    border-spacing: 0; 
+    width: 100%; 
+}
+/* Giữ cố định 4 cột đầu bảng PC khi cuộn ngang */
+th:nth-child(-n+4), td:nth-child(-n+4) {
+    position: sticky;
+    z-index: 2;
+}
+thead th { position: sticky; top: 0; background-color: #007bff; color: white; z-index: 10; height: 38px; font-weight: 600; }
+
+.limit-cell { max-width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.status-running { color: #28a745; font-weight: bold; }
+.status-stopped { color: #dc3545; font-weight: bold; }
+.cmd-badge { padding: 2px 6px; border-radius: 4px; font-weight: bold; font-size: 11px; }
+.cmd-active { background: #fff3cd; color: #856404; border: 1px solid #ffeeba; }
+.cmd-none { background: #e9ecef; color: #495057; }
+.farming-highlight td { background-color: #f4fbf7 !important; }
+
+/* Đóng băng 4 cột đầu bảng máy tính theo cấu hình hàm renderMonitorTablePC mới */
+th:nth-child(1), td:nth-child(1) { left: 0; width: 50px; min-width: 50px; text-align: center; }   
+th:nth-child(2), td:nth-child(2) { left: 50px; width: 110px; min-width: 110px; } 
+th:nth-child(3), td:nth-child(3) { left: 160px; width: 120px; min-width: 120px; } 
+th:nth-child(4), td:nth-child(4) { left: 280px; width: 100px; min-width: 100px; } 
+th:nth-child(-n+4), td:nth-child(-n+4) { position: sticky; z-index: 2; }
+td:nth-child(-n+4) { background-color: #fefefe; }
+tr:nth-child(even) td:nth-child(-n+4) { background-color: #f1f5f9; }
+thead th:nth-child(-n+4) { z-index: 15; background-color: #0069d9; }
+
+/* Layout Thẻ Mobile */
+.mobile-cards-container { display: none; flex-direction: column; gap: 12px; margin-top: 10px; }
+.mobile-card { background: white; border: 1px solid #dee2e6; border-radius: 8px; padding: 12px; box-shadow: 0 2px 5px rgba(0,0,0,0.02); }
+.mobile-card.farming { border-left: 5px solid #28a745; }
+.mobile-card.stopped { border-left: 5px solid #dc3545; }
+.m-card-row-1, .m-card-row-2, .m-card-row-3 { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; gap: 8px; }
+.m-card-row-3 { margin-bottom: 0; border-top: 1px solid #eee; padding-top: 8px; }
+
+@media screen and (max-width: 768px) {
+    .table-wrapper { display: none; }
+    .mobile-cards-container { display: flex; }
+}
