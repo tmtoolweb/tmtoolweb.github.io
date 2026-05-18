@@ -4,1419 +4,210 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>TMTool - Hệ Thống Quản Lý Toàn Diện</title>
+    
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
-    <style>
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: #f4f6f9; margin: 0; padding: 15px; font-size: 13px; color: #333; }
-        .container { max-width: 100%; margin: 0 auto; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); }
-        .login-box { max-width: 400px; margin: 100px auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); display: none; }
-        input, select, textarea { padding: 9px 12px; margin: 5px 0; border: 1px solid #ced4da; border-radius: 6px; box-sizing: border-box; font-size: 13px; transition: border-color 0.2s; }
-        input:focus, select:focus, textarea:focus { border-color: #007bff; outline: none; box-shadow: 0 0 0 3px rgba(0,123,255,0.15); }
-        input[type="email"], input[type="password"], input[type="text"], input[type="number"], textarea { width: 100%; }
-        
-        button { padding: 10px 16px; background-color: #007bff; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 13px; transition: all 0.2s; }
-        button:hover { background-color: #0056b3; }
-        
-        .top-navbar { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 15px; background: #ffffff; padding: 12px 20px; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); margin-bottom: 15px; border: 1px solid #e9ecef; }
-        .nav-left-section { display: flex; align-items: center; gap: 20px; flex-wrap: wrap; }
-        .header-welcome { margin: 0; font-size: 16px; font-weight: 700; color: #212529; white-space: nowrap; }
-        
-        .stats-inline { display: flex; gap: 15px; flex-wrap: wrap; }
-        .stat-inline-item { background: #f8f9fa; border: 1px solid #dee2e6; padding: 6px 14px; border-radius: 6px; display: flex; align-items: center; gap: 6px; font-size: 12px; }
-        .stat-inline-item .lbl { color: #6c757d; font-weight: 500; }
-        .stat-inline-item .val { font-weight: 700; color: #007bff; }
-        .stat-inline-item.rate .val { color: #28a745; }
-
-        .admin-inline-box { background: #fff9e6; border: 1px solid #ffeeba; padding: 4px 10px; border-radius: 6px; display: flex; align-items: center; gap: 8px; }
-        .admin-inline-box label { font-weight: 700; color: #856404; font-size: 12px; }
-        .admin-inline-box select { margin: 0; padding: 4px 8px; height: 30px; font-weight: 700; color: #007bff; border-color: #ffc107; min-width: 250px; }
-
-        .nav-right-actions { display: flex; gap: 8px; }
-        .logout-btn { background-color: #dc3545; }
-        .logout-btn:hover { background-color: #bd2130; }
-        .pw-btn { background-color: #ffc107; color: #212529; }
-        .pw-btn:hover { background-color: #e0a800; }
-        .btn-google { background-color: #dc3545; width: 100%; margin-top: 10px; display: flex; align-items: center; justify-content: center; gap: 10px; }
-
-        /* HÀNG TIÊU ĐỀ TAB & LỌC CHUNG - FREEZE TOP */
-        .tabs-and-actions-bar { 
-            position: sticky; 
-            top: 0; 
-            z-index: 100; 
-            background: #f4f6f9; 
-            display: flex; 
-            justify-content: space-between; 
-            align-items: flex-end; 
-            border-bottom: 2px solid #dee2e6; 
-            margin-bottom: 15px; 
-            padding-bottom: 5px; 
-            gap: 15px; 
-            flex-wrap: wrap; 
-        }
-        .tabs-left { display: flex; gap: 5px; margin-bottom: -7px; }
-        .tab-link { padding: 10px 18px; background: #e9ecef; border: 1px solid #dee2e6; border-bottom: none; cursor: pointer; border-radius: 6px 6px 0 0; font-weight: bold; color: #495057; transition: all 0.2s; white-space: nowrap; }
-        .tab-link:hover { background: #dee2e6; }
-        .tab-link.active { background: #007bff; color: white; border-color: #007bff; }
-        
-        .actions-right { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
-        .filter-box { display: flex; align-items: center; gap: 8px; }
-        .filter-box label { font-weight: bold; color: #495057; font-size: 12px; white-space: nowrap; }
-        .filter-box select { margin: 0; min-width: 160px; height: 34px; padding: 4px 10px; }
-        .excel-btn { background-color: #28a745; height: 34px; padding: 0 14px; display: inline-flex; align-items: center; justify-content: center; font-size: 13px; }
-        .excel-btn:hover { background-color: #218838; }
-
-        .tab-content { display: none; background: #ffffff; }
-        .tab-content.active { display: block; }
-
-        .panel-box { background: white; padding: 15px; border: 1px solid #e9ecef; border-radius: 8px; margin-bottom: 15px; }
-        .form-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 10px; }
-        .form-grid div { display: flex; flex-direction: column; }
-        .form-grid.checkbox-row { display: flex; flex-wrap: wrap; gap: 20px; margin-top: 10px; background: #f8f9fa; padding: 10px; border-radius: 4px; }
-        .form-grid.checkbox-row div { flex-direction: row; align-items: center; gap: 8px; }
-        .form-grid.checkbox-row input { width: auto; margin: 0; }
-        .form-grid label { font-weight: bold; font-size: 11px; color: #555; margin-bottom: 2px; }
-        
-        /* BẢNG THIẾT BỊ PC - CHIỀU CAO ĐỘNG AUTO FIT */
-        .table-wrapper { 
-            max-height: calc(100vh - 180px); 
-            min-height: 200px;
-            overflow: auto; 
-            border: 1px solid #dee2e6; 
-            position: relative; 
-            background: #fff; 
-            border-radius: 6px; 
-        }
-        table { border-collapse: separate; border-spacing: 0; width: 100%; }
-        th, td { border-right: 1px solid #dee2e6; border-bottom: 1px solid #dee2e6; padding: 8px 10px; text-align: left; vertical-align: middle; white-space: nowrap; }
-        thead th { position: sticky; top: 0; background-color: #007bff; color: white; z-index: 10; height: 38px; font-weight: 600; }
-        
-        thead th.sortable { cursor: pointer; user-select: none; }
-        thead th.sortable:hover { background-color: #0056b3; }
-        .sort-icon { font-size: 11px; margin-left: 3px; color: #ffeb3b; }
-
-        /* PC FREEZE COLS */
-        th:nth-child(1), td:nth-child(1) { left: 0; width: 130px; min-width: 130px; }   
-        th:nth-child(2), td:nth-child(2) { left: 130px; width: 85px; min-width: 85px; } 
-        th:nth-child(3), td:nth-child(3) { left: 215px; width: 80px; min-width: 80px; } 
-        th:nth-child(4), td:nth-child(4) { left: 295px; width: 90px; min-width: 90px; } 
-        th:nth-child(5), td:nth-child(5) { left: 385px; width: 110px; min-width: 110px; } 
-        th:nth-child(6), td:nth-child(6) { left: 495px; width: 85px; min-width: 85px; } 
-        
-        th:nth-child(-n+6), td:nth-child(-n+6) { position: sticky; z-index: 2; }
-        td:nth-child(-n+6) { background-color: #fefefe; }
-        tr:nth-child(even) td:nth-child(-n+6) { background-color: #f1f5f9; }
-        thead th:nth-child(-n+6) { z-index: 15; background-color: #0069d9; }
-
-        .limit-cell {
-            max-width: 180px; white-space: normal; display: -webkit-box;
-            -webkit-line-clamp: 2; -webkit-box-orient: vertical;
-            overflow: hidden; text-overflow: ellipsis; line-height: 1.4; font-size: 12px;
-        }
-
-        .action-grid { display: flex; flex-direction: column; gap: 4px; width: 120px; }
-        .action-row-1 { display: flex; gap: 4px; justify-content: flex-start; }
-        .action-row-2 { display: flex; gap: 3px; align-items: center; width: 100%; }
-        .action-row-2 select { padding: 2px; font-size: 11px; height: 24px; flex: 1; margin:0; }
-        .btn-mini { padding: 2px 6px; font-size: 11px; border-radius: 3px; cursor: pointer; font-weight: bold; border: none; text-align: center;}
-        .btn-play { background: #28a745; color: white; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; border-radius: 3px; font-size: 12px;}
-
-        .status-running { color: #28a745; font-weight: bold; }
-        .status-stopped { color: #dc3545; font-weight: bold; }
-        .summary-badge { background: #e2e3e5; padding: 5px 10px; border-radius: 4px; font-weight: bold; display: inline-block; margin-bottom: 10px; margin-right: 10px; }
-        
-        tr.farming-highlight td { background-color: #e2f0d9 !important; }
-        tr.farming-highlight td:nth-child(-n+6) { background-color: #cddcb4 !important; }
-
-        .cmd-badge { display: inline-block; padding: 3px 8px; border-radius: 4px; font-size: 11px; font-weight: bold; }
-        .cmd-badge.cmd-none { background-color: #e9ecef; color: #495057; border: 1px solid #ced4da; }
-        .cmd-badge.cmd-active { background-color: #fff3cd; color: #856404; border: 1px solid #ffeeba; }
-
-        /* POPUP ĐỔI MẬT KHẨU */
-        .modal { display: none; position: fixed; z-index: 9999; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.4); }
-        .modal-content { background-color: #fefefe; margin: 15% auto; padding: 20px; border: 1px solid #888; width: 90%; max-width: 400px; border-radius: 10px; box-shadow: 0 4px 20px rgba(0,0,0,0.2); }
-        .modal-header { font-size: 16px; font-weight: bold; margin-bottom: 15px; color: #007bff; border-bottom: 1px solid #eee; padding-bottom: 8px; }
-        .modal-footer { display: flex; justify-content: flex-end; gap: 10px; margin-top: 15px; }
-
-        /* GIAO DIỆN MOBILE DẠNG THẺ (3 HÀNG) */
-        .mobile-cards-container { display: none; flex-direction: column; gap: 12px; margin-top: 10px; }
-        .mobile-card { background: white; border: 1px solid #dee2e6; border-radius: 8px; padding: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
-        .mobile-card.farming { border-left: 5px solid #28a745; background: #fdfdfd; }
-        .mobile-card.stopped { border-left: 5px solid #dc3545; background: #fdfdfd; }
-        
-        .m-card-row-1 { display: flex; justify-content: space-between; align-items: center; font-weight: bold; font-size: 13px; color: #111; margin-bottom: 6px; }
-        .m-card-row-2 { display: flex; justify-content: space-between; align-items: center; font-size: 12px; color: #495057; margin-bottom: 8px; border-bottom: 1px dashed #eee; padding-bottom: 6px; }
-        .m-card-row-3 { display: flex; align-items: center; gap: 8px; font-size: 12px; margin-bottom: 8px; }
-        
-        @media screen and (max-width: 768px) {
-            .table-wrapper { display: none; }
-            .mobile-cards-container { display: flex; }
-            .excel-btn { display: none !important; }
-            
-            .tabs-and-actions-bar { 
-                position: sticky; 
-                top: 0; 
-                z-index: 1000; 
-                background: #f4f6f9; 
-                padding: 10px 0; 
-                margin-bottom: 10px;
-                display: flex;
-                flex-direction: row;
-                justify-content: space-between;
-                align-items: center;
-                border-bottom: 2px solid #dee2e6;
-            }
-            .tabs-left { margin-bottom: 0; }
-            .tab-link { padding: 8px 12px; font-size: 12px; border-radius: 4px 4px 0 0; }
-            .actions-right { padding-bottom: 0; }
-            .filter-box select { min-width: 120px; height: 32px; font-size: 12px; }
-            .top-navbar { padding: 10px; }
-            .nav-left-section { gap: 10px; }
-        }
-    </style>
+    <link rel="stylesheet" href="css/global.css">
+    <link rel="stylesheet" href="css/sidebar.css">
+    <link rel="stylesheet" href="css/dashboard.css">
 </head>
 <body>
 
-<div id="passwordModal" class="modal">
-    <div class="modal-content">
-        <div class="modal-header" id="modal-pw-title">🔐 Đổi mật khẩu tài khoản</div>
-        <div id="old-pass-group">
-            <label style="font-weight: bold; font-size: 12px;">Mật khẩu hiện tại:</label>
-            <input type="password" id="pw-old-input" placeholder="Nhập mật khẩu hiện tại">
-        </div>
-        <div style="margin-top: 10px;">
-            <label style="font-weight: bold; font-size: 12px;">Mật khẩu mới:</label>
-            <input type="password" id="pw-new-input" placeholder="Tối thiểu 6 ký tự">
-        </div>
-        <div class="modal-footer">
-            <button style="background: #6c757d;" onclick="closePasswordModal()">Hủy</button>
-            <button style="background: #28a745;" onclick="submitChangePassword()">Xác nhận</button>
-        </div>
+    <div id="login-form" class="login-box">
+        <h2 style="text-align: center; margin-top: 0; color:#007bff;">ĐĂNG NHẬP TMTOOL</h2>
+        <input type="email" id="email" placeholder="Email">
+        <input type="password" id="password" placeholder="Mật khẩu">
+        <button style="width: 100%; margin-top: 10px;" onclick="loginWithEmail()">Đăng Nhập</button>
     </div>
-</div>
 
-<div id="login-form" class="login-box">
-    <h2 style="text-align: center; margin-top: 0; color:#007bff;">ĐĂNG NHẬP TMTOOL</h2>
-    <input type="email" id="email" placeholder="Email">
-    <input type="password" id="password" placeholder="Mật khẩu">
-    <button style="width: 100%; margin-top: 10px;" onclick="loginWithEmail()">Đăng Nhập</button>
-</div>
+    <div id="dashboard-layout" style="display:none;">
+        <div class="sidebar-overlay" id="sidebar-overlay" onclick="toggleSidebar()"></div>
 
-<div id="dashboard" style="display:none;" class="container">
-    
-    <div class="top-navbar">
-        <div class="nav-left-section">
-            <h2 class="header-welcome">👤 <span id="user-display" style="color: #007bff;"></span> <span id="role-display" style="font-size: 12px; color: #6c757d; font-weight: normal;"></span></h2>
-            
-            <div class="stats-inline">
-                <div class="stat-inline-item">
-                    <span class="lbl">💰 Doanh thu:</span>
-                    <span class="val" id="top-revenue">0đ</span>
+        <nav class="sidebar" id="sidebar">
+            <div class="sidebar-brand">
+                <i class="fas fa-chart-pie" style="margin-right: 10px; color: #007bff;"></i> TMTOOL PRO
+            </div>
+            <div class="sidebar-menu">
+                <div class="menu-item active" onclick="switchMenu(event, 'tab-monitor')">
+                    <i class="fas fa-desktop"></i> Bảng Thiết Bị
                 </div>
-                <div class="stat-inline-item rate">
-                    <span class="lbl">🎯 Tỷ lệ Job:</span>
-                    <span class="val" id="top-job-rate">0 / 0 (0%)</span>
+                <div class="menu-item" onclick="switchMenu(event, 'tab-add-device')">
+                    <i class="fas fa-plus-square"></i> Thêm Máy / Excel
+                </div>
+                <div class="menu-item" onclick="switchMenu(event, 'tab-settings')">
+                    <i class="fas fa-cog"></i> Cài Đặt Hệ Thống
                 </div>
             </div>
+        </nav>
 
-            <div id="admin-selector-box" class="admin-inline-box" style="display:none;">
-                <label>⚡ Đang điều khiển:</label>
-                <select id="admin-user-select" onchange="onAdminSelectUser(this.value)"></select>
-            </div>
-        </div>
-
-        <div class="nav-right-actions">
-            <button class="pw-btn" onclick="openPasswordModal()">🔑 Đổi mật khẩu</button>
-            <button class="logout-btn" onclick="logout()">🚪 Đăng xuất</button>
-        </div>
-    </div>
-
-    <div class="tabs-and-actions-bar">
-        <div class="tabs-left">
-            <button class="tab-link active" onclick="openTab(event, 'tab-monitor')">📊 Bảng Thiết Bị</button>
-            <button class="tab-link" id="add-device-tab-menu" onclick="openTab(event, 'tab-add-device')">➕ Thêm Máy</button>
-			<button class="tab-btn" style=" color: #856404; background: #fff3cd;" onclick="openTab(event, 'tab-settings')">⚙️ Cài đặt</button>
-        </div>
-
-        <div class="actions-right">
-            <button class="excel-btn" onclick="exportTableToExcel()">📥 Xuất Excel</button>
-            <div class="filter-box">
-                <select id="device-filter-select" onchange="filterTableByPhoneId(this.value)">
-                    <option value="">-- Tất cả máy --</option>
-                </select>
-            </div>
-        </div>
-    </div>
-    
-    <div id="tab-monitor" class="tab-content active">
-        <div class="table-wrapper">
-            <table>
-                <thead>
-                    <tr>
-                        <th>Hành Động</th>
-                        <th class="sortable" onclick="handleSortClick('status')">Trạng Thái <span id="s-status" class="sort-icon"></span></th>
-                        <th class="sortable" onclick="handleSortClick('activeCommand')">Lệnh Chờ <span id="s-activeCommand" class="sort-icon"></span></th>
-                        <th class="sortable" onclick="handleSortClick('phoneId')">phoneId <span id="s-phoneId" class="sort-icon"></span></th>
-                        <th class="sortable" onclick="handleSortClick('userName')">userName <span id="s-userName" class="sort-icon"></span></th>
-                        <th class="sortable" onclick="handleSortClick('userType')">userType <span id="s-userType" class="sort-icon"></span></th>
-                        <th class="sortable" onclick="handleSortClick('appTT')">appTT <span id="s-appTT" class="sort-icon"></span></th>
-                        <th class="sortable" onclick="handleSortClick('userGroup')">userGroup <span id="s-userGroup" class="sort-icon"></span></th>
-                        <th class="sortable" onclick="handleSortClick('tuongTacAccount')">tuongTacAccount <span id="s-tuongTacAccount" class="sort-icon"></span></th>
-                        <th>msgHistory (Log)</th>
-                        <th class="sortable" onclick="handleSortClick('emailTT')">emailTT <span id="s-emailTT" class="sort-icon"></span></th>
-                        <th>passwordTT</th>
-                        <th>passwordEmail</th>
-                        <th class="sortable" onclick="handleSortClick('glID')">glID <span id="s-glID" class="sort-icon"></span></th>
-                        <th>keyAuthenticator</th>
-                        <th>glUsername</th>
-                        <th>userCookie</th>
-                        <th class="sortable" onclick="handleSortClick('platformId')">platformId <span id="s-platformId" class="sort-icon"></span></th>
-                        <th class="sortable" onclick="handleSortClick('todayMillis')">todayMillis <span id="s-todayMillis" class="sort-icon"></span></th>
-                    </tr>
-                </thead>
-                <tbody id="devices-table-body">
-                    <tr><td colspan="19" style="text-align: center; color: #999; height: 80px;">Đang tải dữ liệu...</td></tr>
-                </tbody>
-            </table>
-        </div>
-
-        <div class="mobile-cards-container" id="devices-mobile-body"></div>
-    </div>
-
-    <div id="tab-add-device" class="tab-content">
-        <div class="panel-box" style="border: 2px dashed #28a745; background: #f4fbf7;">
-            <h3 style="margin-top:0; color:#28a745; font-size:14px;">📊 Nhập / Cập Nhật Qua File Excel</h3>
-            <input type="file" id="excel-file-input" accept=".xlsx, .xls" />
-            <button style="background-color: #28a745; padding: 7px 12px; font-size: 12px;" onclick="handleExcelUpload()">📥 Đồng Bộ Excel Lên Cloud</button>
-            <div id="excel-upload-status" style="margin-top:8px; font-weight:bold; font-size:12px; color:#28a745;"></div>
-        </div>
-
-        <div class="panel-box" style="background: #fffdf5; border: 1px solid #ffeeba;">
-            <h3 style="margin-top:0; color:#856404; font-size:14px;">⚡ Nhập Nhanh Bằng Chuỗi Json Gốc</h3>
-            <textarea id="f-json-input" rows="3" placeholder='Dán chuỗi dữ liệu JSON vào đây...' oninput="parseQuickJsonField(this.value)"></textarea> 
-            <div id="json-parse-status" style="font-weight:bold; font-size:12px; margin-top:2px;"></div>
-        </div>
-
-        <div class="panel-box">
-            <h3 id="form-title" style="margin-top:0; color:#0c5460;">1. Nhập Thủ Công Cấu Hình Thiết Bị</h3>
-            <div class="form-grid">
-                <div><label>phoneId (*Bắt buộc)</label><input type="text" id="f-phoneId" placeholder="Ví dụ: May_01"></div>
-                <div><label>userName (*Bắt buộc)</label><input type="text" id="f-userName"></div>
-                <div><label>userType (*Bắt buộc)</label><input type="text" id="f-userType" placeholder="Tiktok / Facebook"></div>
-                <div><label>appTT</label><input type="number" id="f-appTT" value="0"></div>
-                <div><label>userGroup</label><input type="number" id="f-userGroup" value="0"></div>
-                <div><label>emailTT</label><input type="text" id="f-emailTT"></div>
-                <div><label>passwordTT</label><input type="text" id="f-passwordTT"></div>
-                <div><label>passwordEmail</label><input type="text" id="f-passwordEmail"></div>
-                <div><label>platformId</label><input type="text" id="f-platformId"></div>
-                <div><label>glID</label><input type="text" id="f-glID" value="0"></div>
-                <div><label>keyAuthenticator</label><input type="text" id="f-keyAuthenticator"></div>
-                <div><label>glToken</label><input type="text" id="f-glToken"></div>
-                <div><label>glUsername</label><input type="text" id="f-glUsername"></div>
-                <div><label>userCookie</label><input type="text" id="f-userCookie"></div>
-            </div>
-
-            <div class="form-grid checkbox-row">
-                <div><input type="checkbox" id="f-tuongTacAccount"><label for="f-tuongTacAccount">tuongTacAccount</label></div>
-                <div><input type="checkbox" id="f-logGmail"><label for="f-logGmail">logGmail</label></div>
-                <div><input type="checkbox" id="f-logPassword"><label for="f-logPassword">logPassword</label></div>
-            </div>
-
-            <div style="margin-top: 15px; border-top: 1px dashed #ddd; padding-top: 12px;">
-                <button id="btn-submit-form" style="background-color: #17a2b8;" onclick="userAddDeviceManually()">Lưu Thiết Bị</button>
-                <button id="btn-cancel-edit" style="background-color: #6c757d; display:none;" onclick="cancelEditMode()">Hủy Chỉnh Sửa</button>
-            </div>
-        </div>
-    </div>
-	<div id="tab-settings" class="tab-content">
-		<div style="display: grid; grid-template-columns: 1fr; gap: 20px;">
-			
-			<div class="card pc-only" style="background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
-				<h3 style="margin-top:0; color: #2c3e50;"><i class="fas fa-table"></i> Cấu hình các cột hiển thị (Chỉ áp dụng trên PC)</h3>
-				<p style="color: #666; margin-bottom: 15px;">Kéo thả hoặc tích chọn để Ẩn/Hiện và Thay đổi thứ tự hiển thị các cột dữ liệu trên bảng điều khiển.</p>
-				
-				<div id="column-settings-container" style="display: flex; flex-direction: column; gap: 8px; max-width: 500px; margin-bottom: 15px;">
-					</div>
-				<button onclick="saveColumnSettings()" style="background: #27ae60; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; font-weight: bold;">
-					💾 Lưu cấu hình cột
-				</button>
-			</div>
-			<div class="card mobile-only" style="background: #fff3cd; color: #856404; padding: 15px; border-radius: 8px;">
-				⚠️ Các tùy chỉnh ẩn/hiện và thứ tự cột không áp dụng trên giao diện điện thoại (Mobile).
-			</div>
-
-			<div class="card admin-only" id="admin-management-section" style="background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); display: none;">
-				
-				<h3 style="margin-top:0; color:#856404;">Cấp Tài Khoản Thành Viên Mới</h3>
-				<div style="display: flex; gap: 10px; flex-wrap: wrap; align-items: flex-end;">
-					<div style="flex: 2; min-width: 200px;">
-						<label style="font-weight:bold;">Email Đăng Ký:</label>
-						<input type="email" id="new-user-email" placeholder="user@gmail.com">
-					</div>
-					<div style="flex: 1; min-width: 150px;">
-						<label style="font-weight:bold;">Mật Khẩu:</label>
-						<input type="text" id="new-user-password" placeholder="Tối thiểu 6 ký tự">
-					</div>
-					<button onclick="adminCreateUser()" style="background-color: #28a745; height: 35px; margin-bottom: 5px;">Tạo Thành Viên</button>
-				</div>
-				<h3>📋 Quản Lý Nhánh Dữ Liệu</h3>
-				<div class="summary-badge">Tổng số thành viên: <span id="total-users-count" style="color:red;">0</span></div>
-				<table>
-					<thead>
-						<tr style="background-color: #555;">
-							<th style="color:white;text-align:center;width:50px;">STT</th>
-							<th style="color:white;">Tên User</th>
-							<th style="color:white;text-align:center;">Số liệu</th>
-							<th style="color:white;text-align:center;">Hành Động</th>
-						</tr>
-					</thead>
-					<tbody id="admin-user-table-body"></tbody>
-				</table>
-
-			</div>
-        </div>
-
-        
-	</div>
-    <div id="tab-admin-mgr" class="tab-content">
-        <div class="panel-box" style="border-color: #ffeeba; background: #fffdf5;">
-            <h3 style="margin-top:0; color:#856404;">Cấp Tài Khoản Thành Viên Mới</h3>
-            <div style="display: flex; gap: 10px; flex-wrap: wrap; align-items: flex-end;">
-                <div style="flex: 2; min-width: 200px;">
-                    <label style="font-weight:bold;">Email Đăng Ký:</label>
-                    <input type="email" id="new-user-email" placeholder="user@gmail.com">
-                </div>
-                <div style="flex: 1; min-width: 150px;">
-                    <label style="font-weight:bold;">Mật Khẩu:</label>
-                    <input type="text" id="new-user-password" placeholder="Tối thiểu 6 ký tự">
-                </div>
-                <button onclick="adminCreateUser()" style="background-color: #28a745; height: 35px; margin-bottom: 5px;">Tạo Thành Viên</button>
-            </div>
-        </div>
-
-        <h3>📋 Quản Lý Nhánh Dữ Liệu</h3>
-        <div class="summary-badge">Tổng số thành viên: <span id="total-users-count" style="color:red;">0</span></div>
-        <table>
-            <thead>
-                <tr style="background-color: #555;">
-                    <th style="color:white;text-align:center;width:50px;">STT</th>
-                    <th style="color:white;">Tên User</th>
-                    <th style="color:white;text-align:center;">Số liệu</th>
-                    <th style="color:white;text-align:center;">Hành Động</th>
-                </tr>
-            </thead>
-            <tbody id="admin-user-table-body"></tbody>
-        </table>
-    </div>
-</div>
-
-<script>
-const firebaseConfig = {
-    apiKey: "AIzaSyBwvXHAWHy8af7uyuH0B62F07vYHYF7m8o",
-    authDomain: "tmtool-firebase.firebaseapp.com",
-    databaseURL: "https://tmtool-firebase-default-rtdb.asia-southeast1.firebasedatabase.app/",
-    projectId: "tmtool-firebase",
-    storageBucket: "tmtool-firebase.appspot.com",
-    messagingSenderId: "367375494498",
-    appId: "1:964035600880:web:9704a6b717ecd34ec3bd35"
-};
-firebase.initializeApp(firebaseConfig);
-const auth = firebase.auth();
-const database = firebase.database();
-
-let loggedInUserEmail = "";
-let targetOwner = "";
-let globalCachedDevices = {};
-let currentEditingId = null;
-let activePhoneFilter = "";
-let currentSortField = "phoneId";
-let isSortAsc = true;
-
-// Cấu hình các cột có thể tùy chỉnh (Cố định các cột đầu: STT, Thiết bị, Tài khoản, Loại tài khoản và các cột hành động cuối)
-const AVAILABLE_COLUMNS = [
-    { id: 'appTT', label: 'App TT' },
-    { id: 'userGroup', label: 'Nhóm' },
-    { id: 'emailTT', label: 'Email' },
-    { id: 'passwordTT', label: 'Mật khẩu' },
-    { id: 'passwordEmail', label: 'Mật khẩu Mail' },
-    { id: 'platformId', label: 'Platform ID' },
-    { id: 'glID', label: 'Golike ID' },
-    { id: 'keyAuthenticator', label: '2FA Key' },
-    { id: 'glToken', label: 'Golike Token' },
-    { id: 'glUsername', label: 'Golike User' },
-    { id: 'userCookie', label: 'Cookie' },
-    { id: 'tuongTacAccount', label: 'Tương tác' },
-    { id: 'logGmail', label: 'Log Gmail' },
-    { id: 'logPassword', label: 'Log Pass' },
-    { id: 'status', label: 'Trạng thái' },
-    { id: 'todayMillis', label: 'Thời gian chạy' },
-    { id: 'lastMsg', label: 'Nhật ký' }
-];
-
-// Hàm lấy cấu hình cột hiện tại từ localStorage hoặc mặc định hiển thị hết
-function getColumnConfig() {
-    const saved = localStorage.getItem('tmtool_column_config');
-    if (saved) return JSON.parse(saved);
-    // Mặc định: hiện tất cả theo thứ tự khai báo ban đầu
-    return AVAILABLE_COLUMNS.map((col, index) => ({ ...col, visible: true, order: index }));
-}
-
-
-    // Hàm chuyển đổi mili-giây sang định dạng DD/MM hh:mm
-function formatTime(millis) {
-    if (!millis || millis === 0 || isNaN(millis)) return "-";
-    const date = new Date(Number(millis));
-    const day = String(date.getDate()).padStart(2, '0');
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const hours = String(date.getHours()).padStart(2, '0');
-    const mins = String(date.getMinutes()).padStart(2, '0');
-    return `${day}/${month} ${hours}:${mins}`;
-}
-
-// Cập nhật lại logic phân quyền hiển thị khi đăng nhập thành công
-// Tìm chỗ xử lý phân quyền Admin cũ (Ví dụ chỗ kiểm tra adminEmail) bổ sung thêm:
-function checkAdminUI(email) {
-    const isAdmin = (email === "admin@gmail.com" || email === "tue@gmail"); // Thay bằng email admin chuẩn của anh
-    const adminSection = document.getElementById('admin-management-section');
-    if(adminSection) {
-        adminSection.style.display = isAdmin ? 'block' : 'none';
-    }
-}
-
-
-auth.onAuthStateChanged((user) => {
-    if (user) {
-        loggedInUserEmail = user.email;
-        document.getElementById('login-form').style.display = 'none';
-        document.getElementById('dashboard').style.display = 'block';
-        document.getElementById('user-display').innerText = loggedInUserEmail;
-        if (loggedInUserEmail === "admin@gmail.com") {
-            document.getElementById('role-display').innerText = "(Tổng Quản Trị)";
-            
-			document.getElementById('admin-management-section').style.display = 'block';
-            document.getElementById('admin-selector-box').style.display = 'flex';
-            loadAllUsersForAdmin();
-        } else {
-            document.getElementById('role-display').innerText = "(Thành Viên)";
-            
-			document.getElementById('admin-management-section').style.display = 'none';
-			
-			
-			
-			
-			
-			
-			
-			
-            document.getElementById('admin-selector-box').style.display = 'none';
-            targetOwner = loggedInUserEmail.split('@')[0];
-            listenToDeviceData(targetOwner);
-        }
-    } else {
-        document.getElementById('login-form').style.display = 'block';
-        document.getElementById('dashboard').style.display = 'none';
-    }
-});
-
-
-// Hàm hiển thị danh sách cấu hình cột trong Tab Cài đặt
-function renderColumnSettingsUI() {
-    const config = getColumnConfig();
-    const container = document.getElementById('column-settings-container');
-    if(!container) return;
-    
-    // Sắp xếp mảng cấu hình theo trường order hiện tại để hiển thị đúng thứ tự
-    config.sort((a, b) => a.order - b.order);
-    
-    container.innerHTML = '';
-    config.forEach((col, index) => {
-        const div = document.createElement('div');
-        div.style = "display: flex; align-items: center; justify-content: space-between; padding: 8px; background: #f8f9fa; border: 1px solid #e2e8f0; border-radius: 4px;";
-        
-        div.innerHTML = `
-            <div style="display: flex; align-items: center; gap: 10px;">
-                <input type="checkbox" id="chk-col-${col.id}" ${col.visible ? 'checked' : ''} style="cursor:pointer;">
-                <label for="chk-col-${col.id}" style="font-weight: bold; cursor:pointer;">${col.label}</label>
-            </div>
-            <div style="display: flex; gap: 4px;">
-                <button onclick="moveColumnOrder('${col.id}', -1)" ${index === 0 ? 'disabled' : ''} style="padding: 2px 6px; cursor: pointer;">▲</button>
-                <button onclick="moveColumnOrder('${col.id}', 1)" ${index === config.length - 1 ? 'disabled' : ''} style="padding: 2px 6px; cursor: pointer;">▼</button>
-            </div>
-        `;
-        container.appendChild(div);
-    });
-}
-// Cập nhật lại logic phân quyền hiển thị khi đăng nhập thành công
-// Tìm chỗ xử lý phân quyền Admin cũ (Ví dụ chỗ kiểm tra adminEmail) bổ sung thêm:
-
-
-// Thay đổi thứ tự vị trí cột (Lên / Xuống)
-function moveColumnOrder(colId, direction) {
-    let config = getColumnConfig();
-    config.sort((a, b) => a.order - b.order);
-    
-    const index = config.findIndex(c => c.id === colId);
-    if(index === -1) return;
-    
-    const targetIndex = index + direction;
-    if(targetIndex < 0 || targetIndex >= config.length) return;
-    
-    // Tráo đổi vị trí order
-    const tempOrder = config[index].order;
-    config[index].order = config[targetIndex].order;
-    config[targetIndex].order = tempOrder;
-    
-    localStorage.setItem('tmtool_column_config', JSON.stringify(config));
-    renderColumnSettingsUI();
-}
-
-// Lưu trạng thái Ẩn/Hiện từ checkbox
-function saveColumnSettings() {
-    let config = getColumnConfig();
-    config.forEach(col => {
-        const chk = document.getElementById(`chk-col-${col.id}`);
-        if(chk) {
-            col.visible = chk.checked;
-        }
-    });
-    localStorage.setItem('tmtool_column_config', JSON.stringify(config));
-    alert("✓ Đã lưu cấu hình hiển thị cột! Bảng điều khiển sẽ tự động cập nhật.");
-    // Load lại bảng dữ liệu PC để áp dụng cấu hình mới luôn
-    if(typeof lastRenderedData !== 'undefined') {
-        renderMonitorTablePC(lastRenderedData);
-    } else {
-        location.reload();
-    }
-}
-
-
-// Biến lưu tạm dữ liệu để render lại khi đổi cấu hình cột không cần tải lại Firebase
-let lastRenderedData = null; 
-
-function renderMonitorTablePC(data) {
-    lastRenderedData = data; // lưu lại dữ liệu gốc
-    const container = document.getElementById('monitor-table-container-pc'); // ID khu vực chứa bảng PC của anh
-    if(!container) return;
-
-    // Lấy cấu hình cột hiện tại đã sắp xếp theo thứ tự
-    const colConfig = getColumnConfig().sort((a, b) => a.order - b.order);
-    
-    let html = `<table class="main-table" style="width:100%; border-collapse: collapse;"><thead><tr>`;
-    
-    // 1. DỰNG TIÊU ĐỀ (THEAD)
-    // Các cột cố định ĐẦU không đổi
-    html += `<th>STT</th>`;
-    html += `<th>Thiết bị (PhoneID)</th>`;
-    html += `<th>Tài khoản (Username)</th>`;
-    html += `<th>Loại tài khoản</th>`;
-    
-    // Các cột có thể tùy chỉnh động theo cài đặt
-    colConfig.forEach(col => {
-        if(col.visible) {
-            html += `<th>${col.label}</th>`;
-        }
-    });
-    
-    // Các cột cố định HÀNH ĐỘNG ở CUỐI
-    html += `<th>Lệnh điều khiển</th>`;
-    html += `<th>Hành động</th>`;
-    html += `</tr></thead><tbody>`;
-    
-    // 2. DỰNG DỮ LIỆU (TBODY)
-    let stt = 1;
-    // Vòng lặp duyệt qua data Firebase của anh (đoạn này anh giữ nguyên logic bóc tách `phoneId`, `userName` cũ của anh nhé)
-    // Ví dụ cấu trúc vòng lặp bóc tách của anh:
-    for (let phoneId in data) {
-        const phoneData = data[phoneId];
-        if(!phoneData || phoneId === 'command' || phoneId === 'KHOI_TAO') continue;
-        
-        const accounts = phoneData.accounts || {};
-        for (let userName in accounts) {
-            const item = accounts[userName];
-            
-            html += `<tr>`;
-            // Cột cố định đầu
-            html += `<td>${stt++}</td>`;
-            html += `<td><strong>${phoneId}</strong></td>`;
-            html += `<td>${userName}</td>`;
-            html += `<td><span class="badge">${item.userType || ''}</span></td>`;
-            
-            // Render động các cột tùy biến theo đúng thứ tự sắp xếp và trạng thái hiển thị
-            colConfig.forEach(col => {
-                if(col.visible) {
-                    let cellValue = "";
-                    switch(col.id) {
-                        case 'appTT': cellValue = item.appTT || 0; break;
-                        case 'userGroup': cellValue = item.userGroup || 0; break;
-                        case 'emailTT': cellValue = item.emailTT || ''; break;
-                        case 'passwordTT': cellValue = item.passwordTT || ''; break;
-                        case 'passwordEmail': cellValue = item.passwordEmail || ''; break;
-                        case 'platformId': cellValue = item.platformId || ''; break;
-                        case 'glID': cellValue = item.glID || ''; break;
-                        case 'keyAuthenticator': cellValue = item.keyAuthenticator || ''; break;
-                        case 'glToken': cellValue = item.glToken || ''; break;
-                        case 'glUsername': cellValue = item.glUsername || ''; break;
-                        case 'userCookie': cellValue = `<input type="text" value="${item.userCookie || ''}" readonly style="width:60px;" onclick="this.select()">`; break;
-                        case 'tuongTacAccount': cellValue = item.tuongTacAccount ? "Có" : "Không"; break;
-                        case 'logGmail': cellValue = item.logGmail ? "Bật" : "Tắt"; break;
-                        case 'logPassword': cellValue = item.logPassword ? "Bật" : "Tắt"; break;
-                        case 'status': 
-                            let statusColor = item.status === "RUNNING" ? "#2ecc71" : "#e74c3c";
-                            cellValue = `<span style="color:${statusColor}; font-weight:bold;">${item.status || 'STOPPED'}</span>`; 
-                            break;
-                        case 'todayMillis': 
-                            cellValue = item.todayMillis ? new Date(item.todayMillis).toLocaleTimeString() : '-'; 
-                            break;
-                        case 'lastMsg': cellValue = item.lastMsg || ''; break;
-                    }
-                    html += `<td>${cellValue}</td>`;
-                }
-            });
-            
-            // Cột cố định cuối (Hành động / Bắn lệnh)
-            // Giữ nguyên đoạn code sinh `select` bắn lệnh gửi command và nút Sửa/Xóa tài khoản hiện tại của anh sang đây
-            html += `<td>
-                <select id="cmd-select-${phoneId}-${userName}" onchange="sendCommandDirect('${phoneId}','${userName}')">
-                    <option value="">-- Chọn lệnh --</option>
-                    <option value="START">START</option>
-                    <option value="STOP">STOP</option>
-                </select>
-            </td>`;
-            html += `<td>
-                <button onclick="openEditAccount('${phoneId}','${userName}')">Sửa</button>
-                <button onclick="deleteAccount('${phoneId}','${userName}')">Xóa</button>
-            </td>`;
-            
-            html += `</tr>`;
-        }
-    }
-    
-    html += `</tbody></table>`;
-    container.innerHTML = html;
-}
-
-
-
-function loginWithEmail() {
-    const email = document.getElementById('email').value.trim();
-    const password = document.getElementById('password').value;
-    if(!email || !password) return alert("Vui lòng nhập thông tin!");
-    auth.signInWithEmailAndPassword(email, password).catch((e) => alert("Lỗi: " + e.message));
-}
-
-function logout() { auth.signOut().then(() => { location.reload(); }); }
-
-function maskPassword(passStr) {
-    if (!passStr) return "";
-    const str = String(passStr);
-    if (str.length <= 4) return str;
-    return str.substring(0, 3) + "***" + str.substring(str.length - 1);
-}
-
-function openPasswordModal(customUserKey = null) {
-    const modal = document.getElementById('passwordModal');
-    const title = document.getElementById('modal-pw-title');
-    const oldPassGroup = document.getElementById('old-pass-group');
-    
-    document.getElementById('pw-old-input').value = "";
-    document.getElementById('pw-new-input').value = "";
-    
-    if (loggedInUserEmail === "admin@gmail.com" && customUserKey) {
-        title.innerText = `⚙️ Admin đặt MK mới cho User: ${customUserKey}`;
-        title.setAttribute('data-target-user', customUserKey);
-        oldPassGroup.style.display = "none";
-    } else {
-        title.innerText = `🔐 Đổi mật khẩu tài khoản`;
-        title.removeAttribute('data-target-user');
-        oldPassGroup.style.display = "block";
-    }
-    modal.style.display = "block";
-}
-
-function closePasswordModal() {
-    document.getElementById('passwordModal').style.display = "none";
-}
-
-function submitChangePassword() {
-    const title = document.getElementById('modal-pw-title');
-    const newPass = document.getElementById('pw-new-input').value.trim();
-    if(newPass.length < 6) return alert("Mật khẩu mới phải tối thiểu 6 ký tự!");
-
-    if (loggedInUserEmail === "admin@gmail.com" && title.getAttribute('data-target-user')) {
-        const targetUser = title.getAttribute('data-target-user');
-        database.ref(`manager_devices/${targetUser}/SYSTEM_PASSWORD_SET`).set({
-            password: newPass,
-            updatedAt: Date.now()
-        }).then(() => {
-            alert(`✓ Đã đặt mật khẩu mới cho nhánh [ ${targetUser} ] thành công!`);
-            closePasswordModal();
-        }).catch(err => alert("Lỗi: " + err.message));
-    } else {
-        const oldPass = document.getElementById('pw-old-input').value;
-        if(!oldPass) return alert("Vui lòng nhập mật khẩu hiện tại!");
-        const user = auth.currentUser;
-        const cred = firebase.auth.EmailAuthProvider.credential(user.email, oldPass);
-        user.reauthenticateWithCredential(cred).then(() => {
-            user.updatePassword(newPass).then(() => {
-                alert("✓ Đổi mật khẩu thành công!");
-                closePasswordModal();
-            }).catch(e => alert("Lỗi cập nhật: " + e.message));
-        }).catch(e => alert("Mật khẩu hiện tại không chính xác!"));
-    }
-}
-
-function loadAllUsersForAdmin() {
-    database.ref('manager_devices').on('value', (snapshot) => {
-        const root = snapshot.val() || {};
-        const tbody = document.getElementById('admin-user-table-body');
-        const select = document.getElementById('admin-user-select');
-        
-        tbody.innerHTML = "";
-        select.innerHTML = '<option value="">-- Chọn User đồng bộ --</option>';
-        
-        let stt = 1;
-        let userKeys = Object.keys(root).filter(k => k !== 'admin');
-        document.getElementById('total-users-count').innerText = userKeys.length;
-
-        userKeys.forEach(uKey => {
-            const userNode = root[uKey] || {};
-            let countDevices = 0;
-            let countAccs = 0;
-            let dNode = userNode.devices || userNode; 
-            
-            if(dNode && typeof dNode === 'object') {
-                Object.keys(dNode).forEach(pId => {
-                    if(pId !== 'SYSTEM_PASSWORD_SET' && pId !== 'KHOI_TAO' && pId !== 'auth_config') {
-                        countDevices++;
-                        let accs = dNode[pId].accounts || dNode[pId];
-                        if(accs && typeof accs === 'object') {
-                            countAccs += Object.keys(accs).filter(k => typeof accs[k] === 'object' && (accs[k].userType || accs[k].userName)).length;
-                        }
-                    }
-                });
-            }
-
-            const opt = document.createElement('option');
-            opt.value = uKey; 
-            opt.innerText = `${uKey} | ${countDevices} máy | ${countAccs} account`;
-            if(targetOwner === uKey) opt.selected = true;
-            select.appendChild(opt);
-
-            const tr = document.createElement('tr');
-            tr.innerHTML = `
-                <td style="text-align:center; font-weight:bold;">${stt++}</td>
-                <td style="font-weight:bold; color:#007bff;">${uKey}@gmail.com</td>
-                <td style="text-align:center; font-weight:bold; color:green;">${countDevices} máy | ${countAccs} acc</td>
-                <td style="text-align:center;">
-                    <button class="btn-mini" style="background:#007bff; margin:2px;" onclick="forceSelectUserByAdmin('${uKey}')">👁️ Xem Data</button>
-                    <button class="btn-mini" style="background:#ffc107; color:#111; margin:2px;" onclick="openPasswordModal('${uKey}')">🔑 Set Pass</button>
-                    <button class="btn-mini" style="background:#28a745; margin:2px;" onclick="adminControlAllDevices('${uKey}', 'START_FARM')">▶ START ALL</button>
-                    <button class="btn-mini" style="background:#dc3545; margin:2px;" onclick="adminControlAllDevices('${uKey}', 'STOP_FARM')">🛑 STOP ALL</button>
-                </td>
-            `;
-            tbody.appendChild(tr);
-        });
-    });
-}
-
-function forceSelectUserByAdmin(uKey) {
-    document.getElementById('admin-user-select').value = uKey;
-    onAdminSelectUser(uKey);
-    openTab(null, 'tab-monitor');
-}
-
-function onAdminSelectUser(val) {
-    targetOwner = val;
-    if(val) {
-        listenToDeviceData(val);
-    } else {
-        document.getElementById('devices-table-body').innerHTML = '<tr><td colspan="19" style="text-align:center;">Vui lòng chọn một User để xem dữ liệu.</td></tr>';
-        document.getElementById('devices-mobile-body').innerHTML = '';
-    }
-}
-
-function listenToDeviceData(uKey) {
-    if(!uKey) return;
-    database.ref(`manager_devices/${uKey}`).on('value', (snapshot) => {
-        const data = snapshot.val() || {};
-        globalCachedDevices = data.devices ? data.devices : data;
-        rebuildTableAndFilters();
-    });
-}
-
-function rebuildTableAndFilters() {
-    const tbody = document.getElementById('devices-table-body');
-    const mbody = document.getElementById('devices-mobile-body');
-    const filterSelect = document.getElementById('device-filter-select');
-    
-    tbody.innerHTML = "";
-    mbody.innerHTML = "";
-    
-    const preFilterVal = filterSelect.value;
-    filterSelect.innerHTML = '<option value="">-- Tất cả máy --</option>';
-    
-    let uniquePhones = new Set();
-    let flatList = [];
-    
-    let totalRevenue = 0;
-    let totalSuccessJobs = 0;
-    let totalAllJobs = 0;
-
-    Object.keys(globalCachedDevices).forEach(phoneId => {
-        if(phoneId === 'SYSTEM_PASSWORD_SET' || phoneId === 'KHOI_TAO' || phoneId === 'auth_config') return;
-        
-        uniquePhones.add(phoneId);
-        const phoneData = globalCachedDevices[phoneId] || {};
-        
-        let accountsObj = {};
-        if (phoneData.accounts && typeof phoneData.accounts === 'object') {
-            accountsObj = phoneData.accounts;
-        } else if (typeof phoneData === 'object') {
-            Object.keys(phoneData).forEach(k => {
-                if(typeof phoneData[k] === 'object' && phoneData[k] !== null && (phoneData[k].userType || phoneData[k].userName || phoneData[k].status)) {
-                    accountsObj[k] = phoneData[k];
-                }
-            });
-        }
-        
-        const currentRun = phoneData.current_running || {};
-        const commandObj = phoneData.command || {};
-
-        if(Object.keys(accountsObj).length === 0) {
-            flatList.push({
-                phoneId: phoneId, userName: "Chưa có tài khoản", userType: "-", activeCommand: "NONE", status: "STOPPED",
-                appTT: 0, userGroup: 0, tuongTacAccount: false, msgHistory: "Thiết bị trống", emailTT: "", passwordTT: "",
-                passwordEmail: "", glID: 0, keyAuthenticator: "", glToken: "", glUsername: "", userCookie: "", platformId: "", todayMillis: 0
-            });
-        }
-
-        Object.keys(accountsObj).forEach(uName => {
-            const acc = accountsObj[uName] || {};
-            
-            // Tính toán doanh thu & Job chuẩn xác theo thực tế API tool đẩy về
-            let rev = parseFloat(acc.earnToday || acc.earn_today || acc.todayRevenue || acc.revenue) || 0;
-            totalRevenue += rev;
-            let succ = parseInt(acc.jobSuccessToday || acc.job_success_today || acc.todayJobsSuccess || acc.successJobs) || 0;
-            let allJ = parseInt(acc.jobToday || acc.job_today || acc.todayJobsAll || acc.jobsAll || acc.totalJobs) || 0;
-            totalSuccessJobs += succ;
-            totalAllJobs += allJ;
-
-            // Xử lý đọc trạng thái và lệnh từ Device level (nếu có)
-            let isRunning = false;
-            let finalStatus = acc.status || "STOPPED";
-            let finalMsg = acc.msgHistory || acc.log || "";
-            let finalCmd = acc.activeCommand || "NONE";
-
-            if (currentRun && (currentRun.userName === uName || currentRun.userName === acc.userName)) {
-                if (currentRun.status) finalStatus = currentRun.status;
-                if (currentRun.lastMsg) finalMsg = currentRun.lastMsg;
-            }
-            if (finalStatus === "RUNNING") isRunning = true;
-            if (commandObj && (commandObj.userName === uName || commandObj.userName === acc.userName)) {
-                if (commandObj.action) finalCmd = commandObj.action;
-            }
-
-            flatList.push({
-                phoneId: phoneId,
-                userName: uName || acc.userName || "Không rõ",
-                userType: acc.userType || "",
-                activeCommand: finalCmd,
-                status: finalStatus,
-                appTT: acc.appTT || 0,
-                userGroup: acc.userGroup || 0,
-                tuongTacAccount: !!acc.tuongTacAccount,
-                msgHistory: finalMsg,
-                emailTT: acc.emailTT || "",
-                passwordTT: acc.passwordTT || "",
-                passwordEmail: acc.passwordEmail || "",
-                glID: acc.glID || 0,
-                keyAuthenticator: acc.keyAuthenticator || "",
-                glToken: acc.glToken || "",
-                glUsername: acc.glUsername || acc.glUserName || acc.glToken || "-", // Ưu tiên GL Username
-                userCookie: acc.userCookie || "",
-                platformId: acc.platformId || "",
-                todayMillis: (currentRun && currentRun.userName === uName) ? (currentRun.todayMillis || acc.todayMillis || 0) : (acc.todayMillis || 0)
-            });
-        });
-    });
-
-    document.getElementById('top-revenue').innerText = totalRevenue.toLocaleString('vi-VN') + "đ";
-    let jobPercent = totalAllJobs > 0 ? Math.round((totalSuccessJobs / totalAllJobs) * 100) : 0;
-    document.getElementById('top-job-rate').innerText = `${totalSuccessJobs.toLocaleString('vi-VN')} / ${totalAllJobs.toLocaleString('vi-VN')} (${jobPercent}%)`;
-
-    Array.from(uniquePhones).sort().forEach(p => {
-        const opt = document.createElement('option');
-        opt.value = p; opt.innerText = p;
-        if(p === preFilterVal) opt.selected = true;
-        filterSelect.appendChild(opt);
-    });
-
-    if(preFilterVal && uniquePhones.has(preFilterVal)) {
-        flatList = flatList.filter(x => x.phoneId === preFilterVal);
-    }
-
-    flatList.sort((a,b) => {
-        let valA = a[currentSortField];
-        let valB = b[currentSortField];
-        if(typeof valA === 'string') valA = valA.toLowerCase();
-        if(typeof valB === 'string') valB = valB.toLowerCase();
-        if(valA < valB) return isSortAsc ? -1 : 1;
-        if(valA > valB) return isSortAsc ? 1 : -1;
-        return 0;
-    });
-
-    if(flatList.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="19" style="text-align: center; color:#999;">Không có dữ liệu thiết bị phù hợp.</td></tr>';
-        return;
-    }
-
-    flatList.forEach(item => {
-        const tr = document.createElement('tr');
-        const isFarming = item.status === "RUNNING";
-        if(isFarming) tr.classList.add('farming-highlight');
-
-        const statusHtml = isFarming ? '<span class="status-running">● RUNNING</span>' : '<span class="status-stopped">○ STOPPED</span>';
-        const cmdClass = (item.activeCommand && item.activeCommand !== "NONE") ? "cmd-active" : "cmd-none";
-
-        tr.innerHTML = `
-            <td>
-                <div class="action-grid">
-                    <div class="action-row-1">
-                        <button class="btn-mini" style="background:#ffc107; color:#212529;" onclick="triggerEditMode('${item.phoneId}','${item.userName}')">Sửa</button>
-                        <button class="btn-mini" style="background:#dc3545;" onclick="deleteSingleAccount('${item.phoneId}','${item.userName}')">Xóa</button>
+        <div class="main-wrapper">
+            <header class="top-header">
+                <div class="header-left">
+                    <button class="hamburger-btn" onclick="toggleSidebar()"><i class="fas fa-bars"></i></button>
+                    <div style="font-weight: bold; font-size: 16px;">
+                        👤 <span id="user-display" style="color: #007bff;"></span> <span id="role-display" style="font-size:12px; color:#666;"></span>
                     </div>
-                    <div class="action-row-2">
-                        <select id="cmd-select-${item.phoneId}-${item.userName}">
-                            <option value="NONE">NONE</option>
-                            <option value="FARM_TIKTOK">FARM_TIKTOK</option>
-                            <option value="FARM_FACEBOOK">FARM_FACEBOOK</option>
-                            <option value="BUFF_LIKE">BUFF_LIKE</option>
-                            <option value="BUFF_FOLLOW">BUFF_FOLLOW</option>
-                            <option value="STOP">STOP</option>
+                </div>
+                
+                <div class="header-right">
+                    <div style="display:flex; gap:15px; font-size:12px; font-weight:600; margin-right:10px;">
+                        <div>Doanh thu: <span id="top-revenue" style="color:green;">0đ</span></div>
+                        <div>Tỷ lệ Job: <span id="top-job-rate" style="color:blue;">0/0</span></div>
+                    </div>
+
+                    <div id="admin-selector-box" style="display:none; align-items: center; gap: 5px;">
+                        <span style="font-weight: 600; font-size: 12px;">Đang xem:</span>
+                        <select id="admin-user-select" onchange="onAdminSelectUser(this.value)" style="margin:0; padding: 5px; height: 32px;"></select>
+                    </div>
+                    <button style="background-color: #dc3545;" onclick="logout()"><i class="fas fa-sign-out-alt"></i></button>
+                </div>
+            </header>
+
+            <main class="content-area">
+            
+            <div id="tab-monitor" class="tab-content active">
+                <div class="tabs-and-actions-bar">
+                    <h3 style="margin:0;">Danh Sách Thiết Bị / Account</h3>
+                    <div style="display: flex; gap: 10px;">
+                        <select id="device-filter-select" onchange="filterTableByPhoneId(this.value)">
+                            <option value="">-- Tất cả máy --</option>
                         </select>
-                        <button class="btn-play" onclick="sendCommandDirect('${item.phoneId}','${item.userName}')">▶</button>
+                        <button style="background-color: #28a745;" onclick="exportTableToExcel()"><i class="fas fa-file-excel"></i> Xuất Excel</button>
                     </div>
                 </div>
-            </td>
-            <td>${statusHtml}</td>
-            <td><span class="cmd-badge ${cmdClass}">${item.activeCommand}</span></td>
-            <td style="font-weight:bold; color:#007bff;">${item.phoneId}</td>
-            <td style="font-weight:bold;">${item.userName}</td>
-            <td><span style="background:#e1f5fe; color:#0288d1; padding:2px 6px; border-radius:4px; font-weight:bold;">${item.userType}</span></td>
-            <td>${item.appTT}</td>
-            <td>${item.userGroup}</td>
-            <td>${item.tuongTacAccount ? "✓" : "-"}</td>
-            <td><div class="limit-cell" title="${item.msgHistory}">${item.msgHistory}</div></td>
-            <td>${item.emailTT}</td>
-            <td><div class="limit-cell">${maskPassword(item.passwordTT)}</div></td>
-            <td><div class="limit-cell">${maskPassword(item.passwordEmail)}</div></td>
-            <td>${item.glID}</td>
-            <td><div class="limit-cell">${item.keyAuthenticator}</div></td>
-            <td><div class="limit-cell" style="color:#28a745; font-weight:bold;">${item.glUsername}</div></td>
-            <td><div class="limit-cell" title="${item.userCookie}">${item.userCookie}</div></td>
-            <td><b style="color: #495057;">${item.platformId}</b></td>
-            <td><b style="color: #0056b3;">${formatTime(item.todayMillis)}</b></td>
-        `;
-        tbody.appendChild(tr);
 
-        // THẺ CARD CHO MOBILE
-        const mCard = document.createElement('div');
-        mCard.className = `mobile-card ${isFarming ? 'farming' : 'stopped'}`;
-        
-        mCard.innerHTML = `
-            <div class="m-card-row-1">
-                <div>[${item.phoneId}] ${item.userName} <span style="font-size:11px; background:#e1f5fe; color:#0288d1; padding:1px 4px; border-radius:3px;">${item.userType}</span></div>
-                <div>${item.status === "RUNNING" ? '<span style="color:#28a745;">● RUN</span>' : '<span style="color:#dc3545;">○ STOP</span>'}</div>
-                <div style="font-size: 10px; color: #6c757d; font-weight: normal; margin-top: 2px;">⏰ ${formatTime(item.todayMillis)}</div>
+                <div class="table-wrapper" id="monitor-table-container-pc">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Hành Động</th>
+                                <th>Trạng Thái</th>
+                                <th>Lệnh Chờ</th>
+                                <th>phoneId</th>
+                                <th>userName</th>
+                                <th>userType</th>
+                                <th>appTT</th>
+                                <th>userGroup</th>
+                                <th>tuongTacAccount</th>
+                                <th>msgHistory (Log)</th>
+                                <th>emailTT</th>
+                                <th>passwordTT</th>
+                                <th>passwordEmail</th>
+                                <th>glID</th>
+                                <th>keyAuthenticator</th>
+                                <th>glUsername</th>
+                                <th>userCookie</th>
+                                <th>platformId</th>
+                                <th>todayMillis</th>
+                            </tr>
+                        </thead>
+                        <tbody id="devices-table-body">
+                            <tr><td colspan="19" style="text-align: center; color: #999;">Đang tải dữ liệu...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="mobile-cards-container" id="devices-mobile-body"></div>
             </div>
-            
-            <div class="m-card-row-2">
-                <div>Lệnh chờ: <span class="cmd-badge ${cmdClass}" style="padding:1px 6px; font-size:11px;">${item.activeCommand}</span></div>
-                <div style="display:flex; gap:6px;">
-                    <button class="btn-mini" style="background:#ffc107; color:#111; padding:3px 8px;" onclick="triggerEditMode('${item.phoneId}','${item.userName}')">Sửa</button>
-                    <button class="btn-mini" style="background:#dc3545; padding:3px 8px;" onclick="deleteSingleAccount('${item.phoneId}','${item.userName}')">Xóa</button>
+
+            <div id="tab-add-device" class="tab-content">
+                <div class="panel-box" style="border: 2px dashed #28a745; background: #f4fbf7;">
+                    <h3 style="margin-top:0; color:#28a745;">📊 Nhập Qua File Excel</h3>
+                    <input type="file" id="excel-file-input" accept=".xlsx, .xls" />
+                    <button style="background-color: #28a745;" onclick="handleExcelUpload()">Đồng Bộ Excel</button>
+                    <div id="excel-upload-status" style="margin-top:5px; font-weight:bold; color:green;"></div>
+                </div>
+                
+                <div class="panel-box">
+                    <h3 style="margin-top:0;" id="form-title">Nhập Thủ Công</h3>
+                    <div class="form-grid">
+                        <div><label>phoneId</label><input type="text" id="f-phoneId"></div>
+                        <div><label>userName</label><input type="text" id="f-userName"></div>
+                        <div><label>userType</label><input type="text" id="f-userType"></div>
+                        <div><label>appTT</label><input type="number" id="f-appTT" value="0"></div>
+                        <div><label>userGroup</label><input type="number" id="f-userGroup" value="0"></div>
+                        <div><label>emailTT</label><input type="text" id="f-emailTT"></div>
+                        <div><label>passwordTT</label><input type="text" id="f-passwordTT"></div>
+                        <div><label>passwordEmail</label><input type="text" id="f-passwordEmail"></div>
+                        <div><label>platformId</label><input type="text" id="f-platformId"></div>
+                        <div><label>glID</label><input type="text" id="f-glID"></div>
+                        <div><label>keyAuthenticator</label><input type="text" id="f-keyAuthenticator"></div>
+                        <div><label>glToken</label><input type="text" id="f-glToken"></div>
+                        <div><label>glUsername</label><input type="text" id="f-glUsername"></div>
+                        <div><label>userCookie</label><input type="text" id="f-userCookie"></div>
+                    </div>
+                    <div style="margin-top: 10px; display: flex; gap: 15px;">
+                        <label><input type="checkbox" id="f-tuongTacAccount"> Tương tác Account</label>
+                        <label><input type="checkbox" id="f-logGmail"> Log Gmail</label>
+                        <label><input type="checkbox" id="f-logPassword"> Log Password</label>
+                    </div>
+                    <div style="margin-top: 15px;">
+                        <button id="btn-submit-form" onclick="userAddDeviceManually()">Lưu Thiết Bị</button>
+                        <button id="btn-cancel-edit" style="background-color: #6c757d; display: none;" onclick="cancelEditMode()">Hủy</button>
+                    </div>
                 </div>
             </div>
-            
-            <div class="m-card-row-3">
-                <select style="flex:1; height:30px; padding:2px 6px; margin:0; font-size:12px;" id="m-cmd-select-${item.phoneId}-${item.userName}">
-                    <option value="NONE">NONE</option>
-                    <option value="FARM_TIKTOK">FARM_TIKTOK</option>
-                    <option value="FARM_FACEBOOK">FARM_FACEBOOK</option>
-                    <option value="BUFF_LIKE">BUFF_LIKE</option>
-                    <option value="BUFF_FOLLOW">BUFF_FOLLOW</option>
-                    <option value="STOP">STOP</option>
-                </select>
-                <button style="background:#28a745; padding:0 12px; height:30px; display:flex; align-items:center; font-weight:bold; font-size:12px; color:white; border:none; border-radius:4px;" onclick="sendCommandDirectMobile('${item.phoneId}','${item.userName}')">Chạy Lệnh</button>
+
+            <div id="tab-settings" class="tab-content">
+                <div class="panel-box">
+                    <h3>Cấu Hình Hiển Thị Cột</h3>
+                    <div id="column-settings-container" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 10px; margin-bottom: 15px;"></div>
+                    <button onclick="saveColumnSettings()" style="background-color: #28a745;">Lưu Cấu Hình Cột</button>
+                </div>
+                
+                <div class="panel-box admin-only" id="admin-management-section" style="display:none;">
+                    <h3 style="color:#856404;">Quản Lý Thành Viên (Tổng <span id="total-users-count">0</span> uKey)</h3>
+                    <div style="display:flex; gap:10px; margin-bottom:15px;">
+                        <input type="email" id="new-user-email" placeholder="Email...">
+                        <input type="text" id="new-user-password" placeholder="Mật khẩu...">
+                        <button style="background-color: #28a745;" onclick="adminCreateUser()">Tạo User</button>
+                    </div>
+                    <div class="table-wrapper">
+                        <table style="width: 100%;">
+                            <thead>
+                                <tr style="background-color: #ffc107; color: black;">
+                                    <th>STT</th>
+                                    <th>Tài khoản hệ thống</th>
+                                    <th>Thống kê data</th>
+                                    <th>Hành động quản trị</th>
+                                </tr>
+                            </thead>
+                            <tbody id="admin-user-table-body">
+                                </tbody>
+                        </table>
+                    </div>
+                </div>
             </div>
-        `;
-        mbody.appendChild(mCard);
 
-        setTimeout(() => {
-            const pcSelect = document.getElementById(`cmd-select-${item.phoneId}-${item.userName}`);
-            const mSelect = document.getElementById(`m-cmd-select-${item.phoneId}-${item.userName}`);
-            if(pcSelect) pcSelect.value = item.activeCommand || "NONE";
-            if(mSelect) mSelect.value = item.activeCommand || "NONE";
-        }, 10);
-    });
-}
+        </main>
+        </div>
+    </div>
 
-function filterTableByPhoneId(val) {
-    activePhoneFilter = val;
-    rebuildTableAndFilters();
-}
+    <div id="passwordModal" class="login-box" style="display:none; position:fixed; top:50%; left:50%; transform:translate(-50%, -50%); z-index:10001; margin:0; box-shadow:0 5px 30px rgba(0,0,0,0.3);">
+        <h3 id="modal-pw-title" style="margin-top:0; color:#007bff;">🔐 Đổi Mật Khẩu Tài Khoản</h3>
+        <div id="old-pass-group" style="text-align:left; margin-bottom:10px;">
+            <label style="font-weight:600;">Mật khẩu hiện tại:</label>
+            <input type="password" id="pw-old-input" style="width:100%;">
+        </div>
+        <div style="text-align:left; margin-bottom:15px;">
+            <label style="font-weight:600;">Mật khẩu mới (Tối thiểu 6 ký tự):</label>
+            <input type="password" id="pw-new-input" style="width:100%;">
+        </div>
+        <div style="display:flex; gap:10px; justify-content:flex-end;">
+            <button style="background:#6c757d;" onclick="closePasswordModal()">Hủy bỏ</button>
+            <button style="background:#28a745;" onclick="submitChangePassword()">Xác nhận lưu</button>
+        </div>
+    </div>
 
-function handleSortClick(field) {
-    if(currentSortField === field) {
-        isSortAsc = !isSortAsc;
-    } else {
-        currentSortField = field;
-        isSortAsc = true;
-    }
-    rebuildTableAndFilters();
-}
-
-function getAccountRef(phoneId, userName) {
-    if(globalCachedDevices[phoneId] && globalCachedDevices[phoneId].accounts) {
-        return `manager_devices/${targetOwner}/${phoneId}/accounts/${userName}`;
-    }
-    return `manager_devices/${targetOwner}/${phoneId}/${userName}`;
-}
-
-function sendCommandDirect(phoneId, userName) {
-    const sel = document.getElementById(`cmd-select-${phoneId}-${userName}`);
-    if(!sel) return;
-    const cmd = sel.value;
-    if(!targetOwner) return alert("Không tìm thấy chủ mục đồng bộ!");
-    
-    // SỬA TẠI ĐÂY: Bỏ đường dẫn 
-    database.ref(`manager_devices/${targetOwner}/${phoneId}/command`).set({
-        action: cmd, userName: userName, userType: ""
-    }).then(() => {
-        database.ref(getAccountRef(phoneId, userName)).update({
-            activeCommand: cmd, status: cmd === "STOP" ? "STOPPED" : "RUNNING"
-        });
-        alert(`✓ Đã gửi lệnh [ ${cmd} ] cho tài khoản ${userName}`);
-    });
-}
-
-function sendCommandDirectMobile(phoneId, userName) {
-    const sel = document.getElementById(`m-cmd-select-${phoneId}-${userName}`);
-    if(!sel) return;
-    const cmd = sel.value;
-    if(!targetOwner) return alert("Không tìm thấy chủ mục đồng bộ!");
-    
-    // SỬA TẠI ĐÂY: Bỏ đường dẫn 
-    database.ref(`manager_devices/${targetOwner}/${phoneId}/command`).set({
-        action: cmd, userName: userName, userType: ""
-    }).then(() => {
-        database.ref(getAccountRef(phoneId, userName)).update({
-            activeCommand: cmd, status: cmd === "STOP" ? "STOPPED" : "RUNNING"
-        });
-        alert(`✓ Đã gửi lệnh [ ${cmd} ] cho tài khoản ${userName}`);
-    });
-}
-
-function triggerEditMode(phoneId, userName) {
-    let acc = null;
-    if(globalCachedDevices[phoneId]) {
-        if(globalCachedDevices[phoneId].accounts && globalCachedDevices[phoneId].accounts[userName]) {
-            acc = globalCachedDevices[phoneId].accounts[userName];
-        } else if(globalCachedDevices[phoneId][userName]) {
-            acc = globalCachedDevices[phoneId][userName];
-        }
-    }
-    if(!acc) return;
-    
-    currentEditingId = { phoneId, userName };
-    document.getElementById('form-title').innerText = `📝 CHỈNH SỬA TÀI KHOẢN [ ${userName} ] - MÁY [ ${phoneId} ]`;
-    document.getElementById('f-phoneId').value = phoneId;
-    document.getElementById('f-phoneId').disabled = true;
-    document.getElementById('f-userName').value = userName;
-    document.getElementById('f-userName').disabled = true;
-    
-    document.getElementById('f-userType').value = acc.userType || "";
-    document.getElementById('f-appTT').value = acc.appTT || 0;
-    document.getElementById('f-userGroup').value = acc.userGroup || 0;
-    document.getElementById('f-emailTT').value = acc.emailTT || "";
-    document.getElementById('f-passwordTT').value = acc.passwordTT || "";
-    document.getElementById('f-passwordEmail').value = acc.passwordEmail || "";
-    document.getElementById('f-platformId').value = acc.platformId || "";
-    document.getElementById('f-glID').value = acc.glID || 0;
-    document.getElementById('f-keyAuthenticator').value = acc.keyAuthenticator || "";
-    document.getElementById('f-glToken').value = acc.glToken || "";
-    document.getElementById('f-glUsername').value = acc.glUsername || acc.glUserName || "";
-    document.getElementById('f-userCookie').value = acc.userCookie || "";
-    
-    document.getElementById('f-tuongTacAccount').checked = !!acc.tuongTacAccount;
-    document.getElementById('f-logGmail').checked = !!acc.logGmail;
-    document.getElementById('f-logPassword').checked = !!acc.logPassword;
-    
-    document.getElementById('btn-cancel-edit').style.display = "inline-block";
-    document.getElementById('btn-submit-form').innerText = "Cập Nhật Cấu Hình";
-    
-    openTab(null, 'tab-add-device');
-}
-
-function cancelEditMode() {
-    currentEditingId = null;
-    document.getElementById('form-title').innerText = "1. Nhập Thủ Công Tài Khoản Cấu Hình";
-    document.getElementById('f-phoneId').value = "";
-    document.getElementById('f-phoneId').disabled = false;
-    document.getElementById('f-userName').value = "";
-    document.getElementById('f-userName').disabled = false;
-    
-    document.getElementById('btn-cancel-edit').style.display = "none";
-    document.getElementById('btn-submit-form').innerText = "Lưu Thiết Bị";
-}
-
-function userAddDeviceManually() {
-    const pId = document.getElementById('f-phoneId').value.trim();
-    const uName = document.getElementById('f-userName').value.trim();
-    const uType = document.getElementById('f-userType').value.trim();
-    
-    if(!pId || !uName || !uType) return alert("Vui lòng nhập đủ các trường bắt buộc (*)");
-    if(!targetOwner) return alert("Lỗi mục lưu trữ người dùng!");
-
-    const payload = {
-        userType: uType,
-        appTT: parseInt(document.getElementById('f-appTT').value) || 0,
-        userGroup: parseInt(document.getElementById('f-userGroup').value) || 0,
-        emailTT: document.getElementById('f-emailTT').value.trim(),
-        passwordTT: document.getElementById('f-passwordTT').value.trim(),
-        passwordEmail: document.getElementById('f-passwordEmail').value.trim(),
-        platformId: document.getElementById('f-platformId').value.trim(),
-        glID: document.getElementById('f-glID').value.trim(),
-        keyAuthenticator: document.getElementById('f-keyAuthenticator').value.trim(),
-        glToken: document.getElementById('f-glToken').value.trim(),
-        glUsername: document.getElementById('f-glUsername').value.trim(),
-        userCookie: document.getElementById('f-userCookie').value.trim(),
-        tuongTacAccount: document.getElementById('f-tuongTacAccount').checked,
-        logGmail: document.getElementById('f-logGmail').checked,
-        logPassword: document.getElementById('f-logPassword').checked
-    };
-
-    if(!currentEditingId) {
-        payload.activeCommand = "NONE";
-        payload.status = "STOPPED";
-        payload.msgHistory = "Đã khởi tạo thủ công";
-    }
-
-    // SỬA TẠI ĐÂY: Bỏ nút để ghi thẳng vào phoneId
-    database.ref(`manager_devices/${targetOwner}/${pId}/accounts/${uName}`).update(payload).then(() => {
-        alert("✓ Đã lưu cấu hình thiết bị thành công!");
-        cancelEditMode();
-        openTab(null, 'tab-monitor');
-    });
-}
-
-function deleteSingleAccount(phoneId, userName) {
-    if(!confirm(`Bạn chắc chắn muốn xóa tài khoản [ ${userName} ] thuộc máy [ ${phoneId} ]?`)) return;
-    database.ref(getAccountRef(phoneId, userName)).remove().then(() => {
-        alert("✓ Đã gỡ tài khoản thành công!");
-    });
-}
-
-function openTab(evt, tabName) {
-    const tabcontent = document.getElementsByClassName("tab-content");
-    const tablinks = document.getElementsByClassName("tab-btn");
-
-    // Ẩn tất cả tab
-    for (let i = 0; i < tabcontent.length; i++) {
-        tabcontent[i].style.display = "none";
-    }
-
-    // Remove active
-    for (let i = 0; i < tablinks.length; i++) {
-        tablinks[i].classList.remove("active");
-    }
-
-    // Hiện tab được chọn
-    const tab = document.getElementById(tabName);
-    if (tab) {
-        tab.style.display = "block";
-    }
-
-    // Active nút
-    if (evt) {
-        evt.currentTarget.classList.add("active");
-    } else {
-        for (let i = 0; i < tablinks.length; i++) {
-            const onclickAttr = tablinks[i].getAttribute("onclick");
-
-            if (onclickAttr && onclickAttr.includes(tabName)) {
-                tablinks[i].classList.add("active");
-                break;
-            }
-        }
-    }
-
-    // Logic riêng tab settings
-    if (tabName === "tab-settings") {
-        renderColumnSettingsUI();
-
-        
-    }
-}
-
-   
-
-
-function parseQuickJsonField(val) {
-    const status = document.getElementById('json-parse-status');
-    if(!val.trim()) { status.innerText = ""; return; }
-    try {
-        const obj = JSON.parse(val);
-        if(obj.phoneId && obj.userName) {
-            document.getElementById('f-phoneId').value = obj.phoneId;
-            document.getElementById('f-userName').value = obj.userName;
-            if(obj.userType) document.getElementById('f-userType').value = obj.userType;
-            if(obj.emailTT) document.getElementById('f-emailTT').value = obj.emailTT;
-            if(obj.passwordTT) document.getElementById('f-passwordTT').value = obj.passwordTT;
-            status.innerText = "✓ Khớp trường JSON thành công!"; status.style.color="green";
-        } else {
-            status.innerText = "❌ Thiếu phoneId hoặc userName."; status.style.color="red";
-        }
-    } catch(e) { status.innerText = "❌ JSON không đúng định dạng."; status.style.color="red"; }
-}
-
-function handleExcelUpload() {
-    const input = document.getElementById('excel-file-input');
-    const status = document.getElementById('excel-upload-status');
-    if(!input.files.length) return alert("Vui lòng chọn file Excel trước!");
-    
-    const file = input.files[0];
-    const reader = new FileReader();
-    reader.onload = function(e) {
-        try {
-            const data = new Uint8Array(e.target.result);
-            const workbook = XLSX.read(data, { type: 'array' });
-            const sheetName = workbook.SheetNames[0];
-            const sheet = workbook.Sheets[sheetName];
-            const jsonRows = XLSX.utils.sheet_to_json(sheet);
-            
-            if(!jsonRows.length) return alert("File rỗng!");
-            
-            let updatePack = {};
-            let count = 0;
-
-            jsonRows.forEach(row => {
-                let rawJson = row.Json || row.json || row.JSON;
-                if(rawJson) {
-                    const obj = JSON.parse(rawJson);
-                    if(obj.phoneId && obj.userName) {
-                        const pId = obj.phoneId;
-                        const uName = obj.userName;
-                        if(!updatePack[pId]) updatePack[pId] = { accounts: {} };
-                        
-                        updatePack[pId].accounts[uName] = {
-                            userType: obj.userType || "Tiktok",
-                            appTT: parseInt(obj.appTT) || 0,
-                            userGroup: parseInt(obj.userGroup) || 0,
-                            emailTT: obj.emailTT || "",
-                            passwordTT: obj.passwordTT || "",
-                            passwordEmail: obj.passwordEmail || "",
-                            platformId: obj.platformId || "",
-                            glID: obj.glID || "0",
-                            keyAuthenticator: obj.keyAuthenticator || "",
-                            glToken: obj.glToken || "",
-                            glUsername: obj.glUsername || obj.glUserName || "",
-                            userCookie: obj.userCookie || "",
-                            tuongTacAccount: !!obj.tuongTacAccount,
-                            status: obj.status || "STOPPED",
-                            activeCommand: obj.activeCommand || "NONE",
-                            msgHistory: obj.msgHistory || "Đồng bộ từ Excel"
-                        };
-                        count++;
-                    }
-                }
-            });
-
-			// Tìm đoạn cuối trong hàm handleExcelUpload() và sửa lại:
-			if(count > 0 && targetOwner) {
-				// SỬA TẠI ĐÂY: Bỏ 
-				database.ref(`manager_devices/${targetOwner}`).update(updatePack).then(() => {
-					status.innerText = `✓ Đã đồng bộ thành công ${count} tài khoản cấu hình từ Excel lên Cloud!`;
-					input.value = "";
-				});
-			} else { alert("Không tìm thấy trường cấu hình hợp lệ!"); }
-        } catch(err) { alert("Lỗi phân tích file Excel: " + err.message); }
-    };
-    reader.readAsArrayBuffer(file);
-}
-
-function handleJsonUpload(input) {
-    const status = document.getElementById('file-upload-status');
-    if(!input.files.length) return;
-    const file = input.files[0];
-    const reader = new FileReader();
-    reader.onload = function(e) {
-        try {
-            const data = JSON.parse(e.target.result);
-            if(data && typeof data === 'object' && !Array.isArray(data)) {
-                database.ref(`manager_devices/${targetOwner}`).update(data).then(() => {
-                    status.innerText = "✓ Khớp và đồng bộ JSON hoàn tất!"; status.style.color = "green";
-                });
-            } else { status.innerText = "❌ Định dạng phải là JSON Object cây cấu trúc."; status.style.color = "red"; }
-        } catch(err) { status.innerText = "❌ Lỗi: " + err.message; status.style.color = "red"; }
-    };
-    reader.readAsText(file);
-}
-
-function exportTableToExcel() {
-    if(!globalCachedDevices || Object.keys(globalCachedDevices).length === 0) return alert("Không có dữ liệu để xuất!");
-    let rows = [];
-    Object.keys(globalCachedDevices).forEach(pId => {
-        const accs = globalCachedDevices[pId].accounts || {};
-        Object.keys(accs).forEach(uName => {
-            const item = accs[uName] || {};
-            rows.push({
-                "Máy (phoneId)": pId,
-                "Tên cấu hình (userName)": uName,
-                "Trạng Thái": item.status || "STOPPED",
-                "Lệnh Chờ": item.activeCommand || "NONE",
-                "Phân Hệ (userType)": item.userType || "",
-                "appTT": item.appTT || 0,
-                "userGroup": item.userGroup || 0,
-                "tuongTacAccount": item.tuongTacAccount ? "Có" : "Không",
-                "Log Nhật Ký": item.msgHistory || "",
-                "emailTT": item.emailTT || "",
-                "passwordTT": item.passwordTT || "",
-                "passwordEmail": item.passwordEmail || "",
-                "glID": item.glID || 0,
-                "keyAuthenticator": item.keyAuthenticator || "",
-                "glToken": item.glToken || "",
-                "glUsername": item.glUsername || "",
-                "userCookie": item.userCookie || "",
-                "platformId": item.platformId || ""
-            });
-        });
-    });
-    const worksheet = XLSX.utils.json_to_sheet(rows);
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, "Danh_Sach_Thiet_Bi");
-    XLSX.writeFile(workbook, `TMTool_Devices_${targetOwner || 'Export'}.xlsx`);
-}
-
-function adminCreateUser() {
-    const email = document.getElementById('new-user-email').value.trim();
-    const pass = document.getElementById('new-user-password').value.trim();
-    if(!email || !pass) return alert("Điền đủ thông tin tài khoản!");
-    
-    const secondaryApp = firebase.initializeApp(firebaseConfig, "SecondaryApp");
-    secondaryApp.auth().createUserWithEmailAndPassword(email, pass)
-        .then(() => {
-            const uKey = email.split('@')[0];
-            database.ref(`manager_devices/${uKey}/KHOI_TAO`).set({ time: Date.now() });
-            alert(`✓ Đã tạo thành viên [ ${email} ] thành công!`);
-            document.getElementById('new-user-email').value = "";
-            document.getElementById('new-user-password').value = "";
-            secondaryApp.delete();
-        })
-        .catch(e => { alert("Lỗi: " + e.message); secondaryApp.delete(); });
-}
-</script>
+    <script src="js/config.js"></script>
+    <script src="js/ui-controller.js"></script>
+    <script src="js/device-table.js"></script>
+    <script src="js/device-form.js"></script>
+    <script src="js/excel-worker.js"></script>
+    <script src="js/auth.js"></script>
 </body>
 </html>
