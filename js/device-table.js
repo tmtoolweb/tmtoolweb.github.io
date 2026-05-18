@@ -311,3 +311,18 @@ function filterTableByPhoneId(val) {
     // Chỉ cần gọi lại render, hàm sẽ tự động lấy giá trị mới từ Dropbox để lọc hàng xuất bản
     renderMonitorTablePC(globalCachedDevices);
 }
+// Hàm điều phối khi người dùng click vào một cột bất kỳ trên tiêu đề bảng
+function toggleSortPC(columnId) {
+    if (currentSortCol === columnId) {
+        // Nếu nhấn lại đúng cột cũ -> Đảo ngược chiều tăng thành giảm hoặc ngược lại
+        isSortAsc = !isSortAsc;
+    } else {
+        // Nếu nhấn vào cột mới -> Chuyển mục tiêu sort sang cột đó và đặt mặc định là tăng dần (A-Z)
+        currentSortCol = columnId;
+        isSortAsc = true;
+    }
+    // Gọi hàm render lại giao diện bằng dữ liệu đã lưu trong cache
+    if (globalCachedDevices) {
+        renderMonitorTablePC(globalCachedDevices);
+    }
+}
