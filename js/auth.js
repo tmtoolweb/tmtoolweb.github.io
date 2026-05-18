@@ -23,7 +23,7 @@ auth.onAuthStateChanged((user) => {
         if (loggedInUserEmail === "admin@gmail.com") {
             // SỬA TẠI ĐÂY: Thêm kiểm tra phòng trường hợp không có thẻ 'role-display' tránh lỗi Script
             const roleDisp = document.getElementById('role-display');
-            if (roleDisp) roleDisp.innerText = "(Tổng Quản Trị)";
+            if (roleDisp) roleDisp.innerText = "(Admin)";
             
             document.getElementById('admin-management-section').style.display = 'block';
             document.getElementById('admin-selector-box').style.display = 'flex';
