@@ -752,6 +752,7 @@ function rebuildTableAndFilters() {
             <div class="m-card-row-1">
                 <div>[${item.phoneId}] ${item.userName} <span style="font-size:11px; background:#e1f5fe; color:#0288d1; padding:1px 4px; border-radius:3px;">${item.userType}</span></div>
                 <div>${item.status === "RUNNING" ? '<span style="color:#28a745;">● RUN</span>' : '<span style="color:#dc3545;">○ STOP</span>'}</div>
+                <div style="font-size: 10px; color: #6c757d; font-weight: normal; margin-top: 2px;">⏰ ${formatTime(item.todayMillis)}</div>
             </div>
             
             <div class="m-card-row-2">
