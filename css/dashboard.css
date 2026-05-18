@@ -109,3 +109,29 @@ thead th:nth-child(-n+4) { z-index: 15; background-color: #0069d9; }
     .table-wrapper { display: none; }
     .mobile-cards-container { display: flex; }
 }
+/* MẶC ĐỊNH TRÊN MÁY TÍNH (PC) */
+#monitor-table-container-pc {
+    display: block;
+}
+#devices-mobile-body {
+    display: none; /* Ẩn thẻ mobile trên PC */
+}
+
+/* KHI CHUYỂN SANG MÀN HÌNH ĐIỆN THOẠI (DƯỚI 768px) */
+@media (max-width: 767px) {
+    #monitor-table-container-pc {
+        display: none !important; /* Giấu biệt bảng HTML cồng kềnh */
+    }
+    
+    #devices-mobile-body {
+        display: block !important; /* Kích hoạt hiển thị chuỗi Thẻ Mobile rút gọn */
+        padding: 5px;
+        overflow-y: auto;
+        flex: 1;
+    }
+    
+    /* Thu hẹp bớt padding vùng chứa content để dồn chỗ cho thẻ */
+    .content-area {
+        padding: 8px !important;
+    }
+}
